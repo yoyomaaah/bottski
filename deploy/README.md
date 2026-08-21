@@ -5,7 +5,7 @@ One small box runs everything. ~10 minutes start to finish.
 ## 1. Create the droplet
 DigitalOcean → Create → Droplet:
 - Ubuntu 24.04 LTS, Basic, **$6/mo (1 vCPU / 1GB)**
-- Region: any EU region is fine (all timestamps are UTC)
+- Region: any EU region is fine (storage is UTC; dashboard displays Stockholm time)
 - Authentication: **SSH key** (add your Mac's `~/.ssh/id_ed25519.pub`)
 
 ## 2. Provision
@@ -14,7 +14,17 @@ ssh root@<droplet-ip>
 curl -fsSL https://raw.githubusercontent.com/yoyomaaah/bottski/main/deploy/provision.sh | bash
 ```
 Installs git/uv, creates the `bottski` user, clones the repo, syncs deps,
-installs the systemd timer (collect every 20 min, UTC). Re-run any time to update.
+installs all systemd timers. Re-run any time to update system-level pieces.
+
+| timer | schedule | job |
+|---|---|---|
+| bottski-collect | every 20 min, 24/7 | news + external sentiment + extraction + scoring |
+| bottski-observe | 15:40 ET Mon–Fri | daily observation panel |
+| bottski-decide | 15:45 ET Mon–Fri | strategy decisions |
+| bottski-execute | 15:47 ET Mon–Fri | paper orders (reconcile-first) |
+| bottski-backfill | 17:00 ET Mon–Fri | forward returns |
+| bottski-report | every 15 min Mon–Fri | dashboard regeneration |
+| bottski-backup | 23:30 UTC daily | SQLite snapshot to R2 |
 
 ## 3. Secrets
 From your Mac (never commit .env):
