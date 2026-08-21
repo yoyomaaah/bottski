@@ -611,14 +611,15 @@ def _source_health_html(conn) -> str:
         if source.startswith("reddit") and not r["m"]:
             continue  # awaiting API approval; don't render a scary 'never'
         _row(label, r["m"], r["c"] or 0, expect_hours=1)
-    for provider, label in (("apewisdom", "ApeWisdom (WSB mentions)"),
-                            ("tradestie", "Tradestie (WSB sentiment)")):
+    for provider, label, expect in (("apewisdom", "ApeWisdom (WSB mentions)", 1),
+                            ("tradestie", "Tradestie (WSB sentiment)", 1),
+                            ("adanos", "Adanos (multi-subreddit, daily)", 26)):
         r = conn.execute(
             "SELECT MAX(fetched_utc) m, COUNT(DISTINCT fetched_utc) c FROM external_sentiment"
             " WHERE provider = ? AND fetched_utc >= ?", (provider, cutoff)).fetchone()
         last = conn.execute("SELECT MAX(fetched_utc) m FROM external_sentiment"
                             " WHERE provider = ?", (provider,)).fetchone()["m"]
-        _row(label, last, r["c"] or 0, expect_hours=1)
+        _row(label, last, r["c"] or 0, expect_hours=expect)
     return (f"<details><summary>Data-source health</summary><div class=card>"
             f"<table><tr><th>source</th><th>last successful fetch (Stockholm)</th>"
             f"<th class=num>items last 24h</th><th>status</th></tr>{''.join(rows)}</table>"
