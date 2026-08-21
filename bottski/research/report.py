@@ -535,9 +535,13 @@ def _chatter_html(conn) -> str:
             f"<td>{note}</td></tr>")
     return (f"<h2>What the market is talking about</h2>"
             f"<p class=lede>Most-mentioned stocks in the latest observation "
-            f"({day}), whether or not the bot acted. When our score and the "
-            f"WSB crowd disagree by a lot, one of the two is misreading something "
-            f"— those rows are worth a click into the news.</p>"
+            f"({day}), whether or not the bot acted. <b>Our score</b> is computed "
+            f"by this bot from collected news text (we don't read Reddit directly "
+            f"yet — API approval pending). <b>WSB score</b> is Tradestie's published "
+            f"reading of r/wallstreetbets — their collection, their sentiment model. "
+            f"When the two disagree strongly, the news and the WSB crowd are saying "
+            f"different things about the same stock — or one of the models is "
+            f"misreading. Either way, worth a click.</p>"
             f"<div class=card><table><tr><th>stock</th><th class=num>mentions</th>"
             f"<th class=num>our score</th><th class=num>WSB score</th>"
             f"<th class=num>WSB rank</th><th></th></tr>{''.join(trs)}</table></div>")
