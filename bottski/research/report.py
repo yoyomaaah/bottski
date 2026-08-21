@@ -42,7 +42,9 @@ def _decision_time_local() -> str:
     return ny.astimezone(STHLM).strftime("%H:%M")
 
 from bottski.config import Settings
+from bottski.market_calendar import sentiment_window
 from bottski.research import ic
+from bottski.score.vader import SCORER_VERSION
 
 logger = logging.getLogger("bottski.report")
 
@@ -185,9 +187,11 @@ def _status(conn) -> dict:
         (pos_ts,)).fetchall() if pos_ts else []
     day = q("SELECT MAX(date(decision_utc)) m FROM decisions WHERE mode != 'dry-run'")["m"]
     decisions = conn.execute(
-        "SELECT * FROM decisions WHERE date(decision_utc) = ? AND mode != 'dry-run'"
-        " ORDER BY CASE action WHEN 'sell' THEN 0 WHEN 'buy' THEN 1 ELSE 2 END,"
-        " blocked_by IS NOT NULL, symbol", (day,)).fetchall() if day else []
+        "SELECT d.*, ifnull((SELECT obs_date FROM observations o WHERE o.id = d.obs_id),"
+        " date(d.decision_utc)) AS obs_date"
+        " FROM decisions d WHERE date(d.decision_utc) = ? AND d.mode != 'dry-run'"
+        " ORDER BY CASE d.action WHEN 'sell' THEN 0 WHEN 'buy' THEN 1 ELSE 2 END,"
+        " d.blocked_by IS NOT NULL, d.symbol", (day,)).fetchall() if day else []
     return {
         "docs": docs,
         "panel_days": q("SELECT COUNT(DISTINCT obs_date) c FROM observations")["c"],
@@ -354,7 +358,7 @@ def _check(label, value_txt, ok) -> str:
             f"<td class='num {cls}'>{mark}</td></tr>")
 
 
-def _evidence_html(d, settings: Settings) -> str:
+def _evidence_html(d, settings: Settings, conn=None) -> str:
     """The expandable 'what the bot saw' block for one decision."""
     inputs = json.loads(d["inputs_json"])
     p = inputs.get("panel", {})
@@ -399,14 +403,50 @@ def _evidence_html(d, settings: Settings) -> str:
                      f"{acct.get('n_positions', 0)} positions open")
     extra_html = ("<p class=explain style='margin:0.4rem 0 0'>" +
                   " · ".join(extra) + "</p>") if extra else ""
+    receipts = _receipts_html(conn, d["symbol"], d["obs_date"] if "obs_date" in d.keys() else None)
     return (f"<details style='margin:0.2rem 0 0'><summary style='font-size:0.8rem'>"
             f"what the bot saw</summary>"
             f"<table style='margin-top:4px'><tr><th>check</th>"
             f"<th class=num>value</th><th class=num></th></tr>"
-            f"{''.join(rows)}</table>{extra_html}</details>")
+            f"{''.join(rows)}</table>{extra_html}{receipts}</details>")
 
 
-def _decisions_html(st, settings: Settings) -> str:
+def _receipts_html(conn, symbol: str, obs_date: str | None) -> str:
+    """The actual documents behind a symbol's score in its decision window."""
+    if not obs_date or conn is None:
+        return ""
+    try:
+        from datetime import date as _date
+        start_et, end_et = sentiment_window(_date.fromisoformat(obs_date))
+    except Exception:
+        return ""
+    start = start_et.astimezone(timezone.utc).isoformat(timespec="seconds")
+    end = end_et.astimezone(timezone.utc).isoformat(timespec="seconds")
+    rows = conn.execute(
+        """SELECT d.title, d.body, d.source, d.subreddit_or_publisher pub,
+                  d.url, s.compound
+           FROM document_sentiment s JOIN raw_documents d ON d.id = s.document_id
+           WHERE s.symbol = ? AND s.scorer_version = ?
+             AND d.created_utc >= ? AND d.created_utc < ?
+           ORDER BY ABS(s.compound) DESC LIMIT 6""",
+        (symbol, SCORER_VERSION, start, end)).fetchall()
+    if not rows:
+        return ""
+    items = []
+    for r in rows:
+        text = (r["title"] or (r["body"] or "")[:90] or "(no text)").strip()
+        if len(text) > 110:
+            text = text[:107] + "…"
+        cls = "up" if r["compound"] >= 0.05 else ("down" if r["compound"] <= -0.05 else "muted")
+        link = f"<a href='{r['url']}' target='_blank' rel='noopener'>{text}</a>" if r["url"] else text
+        items.append(f"<li><span class='{cls}'>{r['compound']:+.2f}</span> "
+                     f"<span class=muted>{r['pub'] or r['source']}</span> · {link}</li>")
+    return ("<p class=explain style='margin:0.5rem 0 0.1rem'><b>the actual text behind "
+            "the score</b> (strongest first):</p><ul class=explain style='margin:0.1rem 0 "
+            "0.2rem 1.1rem;padding:0'>" + "".join(items) + "</ul>")
+
+
+def _decisions_html(st, settings: Settings, conn=None) -> str:
     if not st["decisions"]:
         return ("<div class=card><p class=explain>No decisions yet today. The bot "
                 "decides once per day at 15:45 New York time (about 15 minutes "
@@ -444,7 +484,7 @@ def _decisions_html(st, settings: Settings) -> str:
         amount = _money(d["target_notional"]) if d["target_notional"] else "—"
         rows.append(f"<tr><td><b>{d['symbol']}</b></td><td>{act}</td>"
                     f"<td class=num>{amount}</td>"
-                    f"<td class=explain>{why}{_evidence_html(d, settings)}</td></tr>")
+                    f"<td class=explain>{why}{_evidence_html(d, settings, conn)}</td></tr>")
     body = (f"<table><tr><th>stock</th><th>action</th><th class=num>amount</th>"
             f"<th>why — expand each row for the evidence</th></tr>{''.join(rows)}</table>") if rows else \
         "<p class=explain>Nothing met the bar today — the bot did not trade.</p>"
@@ -466,6 +506,90 @@ def _fills_html(st) -> str:
     return (f"<details><summary>Recent executed orders ({len(st['fills'])})</summary>"
             f"<div class=card><table><tr><th>time (Stockholm)</th><th>stock</th><th>side</th>"
             f"<th class=num>shares</th><th class=num>price</th></tr>{rows}</table></div></details>")
+
+
+def _chatter_html(conn) -> str:
+    day = conn.execute("SELECT MAX(obs_date) m FROM observations").fetchone()["m"]
+    if not day:
+        return ""
+    rows = conn.execute(
+        """SELECT symbol, n_mentions, score_mean, ext_sentiment_score, ext_rank
+           FROM observations WHERE obs_date = ? AND n_mentions > 0
+           ORDER BY n_mentions DESC LIMIT 10""", (day,)).fetchall()
+    if not rows:
+        return ""
+    trs = []
+    for r in rows:
+        ours, wsb = r["score_mean"], r["ext_sentiment_score"]
+        if ours is not None and wsb is not None and abs(ours - wsb) > 0.3:
+            note = "<span class='badge b-warn'>disagree</span>"
+        elif wsb is None:
+            note = "<span class=muted>—</span>"
+        else:
+            note = "<span class=muted>agree</span>"
+        trs.append(
+            f"<tr><td><b>{r['symbol']}</b></td><td class=num>{r['n_mentions']}</td>"
+            f"<td class=num>{_fmt(ours, digits=2)}</td>"
+            f"<td class=num>{_fmt(wsb, digits=2)}</td>"
+            f"<td class=num>{r['ext_rank'] if r['ext_rank'] is not None else '—'}</td>"
+            f"<td>{note}</td></tr>")
+    return (f"<h2>What the market is talking about</h2>"
+            f"<p class=lede>Most-mentioned stocks in the latest observation "
+            f"({day}), whether or not the bot acted. When our score and the "
+            f"WSB crowd disagree by a lot, one of the two is misreading something "
+            f"— those rows are worth a click into the news.</p>"
+            f"<div class=card><table><tr><th>stock</th><th class=num>mentions</th>"
+            f"<th class=num>our score</th><th class=num>WSB score</th>"
+            f"<th class=num>WSB rank</th><th></th></tr>{''.join(trs)}</table></div>")
+
+
+def _source_health_html(conn) -> str:
+    from datetime import timedelta
+    now = datetime.now(timezone.utc)
+    rows = []
+
+    def _row(name, last_iso, count_24h, expect_hours):
+        if last_iso:
+            last_dt = datetime.fromisoformat(last_iso.replace("Z", "+00:00"))
+            if last_dt.tzinfo is None:
+                last_dt = last_dt.replace(tzinfo=timezone.utc)
+            age_h = (now - last_dt).total_seconds() / 3600
+            if age_h <= expect_hours:
+                badge = "<span class='badge b-good'>✓ fresh</span>"
+            elif age_h <= expect_hours * 4:
+                badge = "<span class='badge b-warn'>⚠ lagging</span>"
+            else:
+                badge = "<span class='badge b-crit'>✗ stale</span>"
+            last_txt = _sthlm(last_iso)
+        else:
+            badge, last_txt = "<span class='badge b-muted'>never</span>", "—"
+        rows.append(f"<tr><td>{name}</td><td>{last_txt}</td>"
+                    f"<td class=num>{count_24h}</td><td>{badge}</td></tr>")
+
+    cutoff = (now - timedelta(hours=24)).isoformat(timespec="seconds")
+    for source, label in (("news", "News (Alpaca/Benzinga)",),
+                          ("reddit_post", "Reddit posts"), ("reddit_comment", "Reddit comments")):
+        r = conn.execute(
+            "SELECT MAX(fetched_utc) m, SUM(fetched_utc >= ?) c FROM raw_documents"
+            " WHERE source = ?", (cutoff, source)).fetchone()
+        if source.startswith("reddit") and not r["m"]:
+            continue  # awaiting API approval; don't render a scary 'never'
+        _row(label, r["m"], r["c"] or 0, expect_hours=1)
+    for provider, label in (("apewisdom", "ApeWisdom (WSB mentions)"),
+                            ("tradestie", "Tradestie (WSB sentiment)")):
+        r = conn.execute(
+            "SELECT MAX(fetched_utc) m, COUNT(DISTINCT fetched_utc) c FROM external_sentiment"
+            " WHERE provider = ? AND fetched_utc >= ?", (provider, cutoff)).fetchone()
+        last = conn.execute("SELECT MAX(fetched_utc) m FROM external_sentiment"
+                            " WHERE provider = ?", (provider,)).fetchone()["m"]
+        _row(label, last, r["c"] or 0, expect_hours=1)
+    return (f"<details><summary>Data-source health</summary><div class=card>"
+            f"<table><tr><th>source</th><th>last successful fetch (Stockholm)</th>"
+            f"<th class=num>items last 24h</th><th>status</th></tr>{''.join(rows)}</table>"
+            f"<p class=explain>“fresh” = fetched within the last hour (collection "
+            f"runs every 20 min). A stale source means the pipeline runs but that "
+            f"feed is returning nothing — the failure emails can't see this.</p>"
+            f"</div></details>")
 
 
 def _research_html(conn, summary_lines) -> str:
@@ -589,8 +713,10 @@ def build(settings: Settings, conn: sqlite3.Connection,
 
     day = st["decision_day"] or "today"
     html.append(f"<h2>Decisions — {day}</h2>")
-    html.append(_decisions_html(st, settings))
+    html.append(_decisions_html(st, settings, conn))
     html.append(_fills_html(st))
+
+    html.append(_chatter_html(conn))
 
     html.append(_research_html(conn, summary_lines))
 
@@ -609,6 +735,7 @@ def build(settings: Settings, conn: sqlite3.Connection,
         f"This dataset is the project's real asset — it grows whether or not the "
         f"bot trades.</p></div>")
 
+    html.append(_source_health_html(conn))
     html.append(GLOSSARY)
     html.append("</main>")
 

@@ -101,3 +101,43 @@ def test_decision_evidence_drilldown(config_file, tmp_path):
     assert "WSB sentiment (Tradestie): 0.12" in html
     assert "WEAK" in html and "passed" in html      # near-miss hold visible
     assert "How the bot decides" in html            # rules card present
+
+
+def test_receipts_chatter_and_health(config_file, tmp_path):
+    s = load_settings(config_file("paper"), env=PAPER_ENV)
+    conn = db.connect(s.db_path)
+    # document inside the Aug 20 window (Aug 19 16:00 ET -> Aug 20 15:40 ET)
+    conn.execute(
+        "INSERT INTO raw_documents (id, source, source_id, subreddit_or_publisher,"
+        " created_utc, fetched_utc, title, body, raw_json) VALUES"
+        " (1, 'news', 'n1', 'benzinga', '2026-08-20T14:00:00+00:00', ?,"
+        " 'Supermicro upgraded on AI server demand', '', '{}')", (db.utcnow(),))
+    from bottski.score.vader import SCORER_VERSION
+    conn.execute(
+        "INSERT INTO document_sentiment (document_id, symbol, compound, scorer_version)"
+        " VALUES (1, 'SMCI', 0.64, ?)", (SCORER_VERSION,))
+    cur = conn.execute(
+        "INSERT INTO observations (obs_date, obs_ts_utc, symbol, n_mentions,"
+        " score_mean, ext_sentiment_score, ext_rank, close, dollar_volume_20d)"
+        " VALUES ('2026-08-20', ?, 'SMCI', 3, 0.64, 0.1, 4, 36.0, 1e8)", (db.utcnow(),))
+    obs_id = cur.lastrowid
+    conn.execute(
+        "INSERT INTO decisions (decision_utc, obs_id, symbol, action, target_notional,"
+        " reason_code, inputs_json, strategy_version, mode) VALUES"
+        " (datetime('now'), ?, 'SMCI', 'buy', 2000, 'sentiment_entry',"
+        " ?, 'v0', 'paper')", (obs_id, json.dumps({"panel": {"score_mean": 0.64,
+                                                             "n_mentions": 3}, "account": {}})))
+    conn.commit()
+    out = tmp_path / "index.html"
+    report.build(s, conn, out_path=out)
+    html = out.read_text()
+    # receipts: the actual headline appears with its individual score
+    assert "Supermicro upgraded on AI server demand" in html
+    assert "+0.64" in html and "the actual text behind" in html
+    # chatter card with disagreement flag (0.64 vs 0.1 -> disagree)
+    assert "What the market is talking about" in html
+    assert "disagree" in html
+    # source health strip
+    assert "Data-source health" in html
+    assert "News (Alpaca/Benzinga)" in html
+    assert "ApeWisdom (WSB mentions)" in html
