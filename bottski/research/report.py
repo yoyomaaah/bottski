@@ -291,39 +291,135 @@ def _positions_html(st) -> str:
             f"has an automatic stop-loss 8% below entry, held at the broker</p></div>")
 
 
-def _decisions_html(st) -> str:
+def _rules_html(settings: Settings) -> str:
+    c, r = settings.strategy, settings.risk
+    return f"""
+<details><summary>How the bot decides (the actual current rules)</summary>
+<div class=card><ol class=explain style='margin:0.2rem 0 0.2rem 1.2rem;padding:0'>
+<li>Look at every stock with at least <b>{c.min_mentions} mentions</b> in the last day.</li>
+<li>Consider buying when average sentiment is <b>≥ {c.min_score:+.2f}</b>
+    (scale −1…+1); skip anything already up more than
+    <b>{c.extended_ret_5d*100:.0f}%</b> this week (don't chase).</li>
+<li>Rank the rest by sentiment; buy at most the <b>top {c.max_new_positions_per_day}</b>,
+    about <b>{_money(min(r.max_order_notional, 100000 * r.max_position_pct / 100))}</b> each
+    (never more than {r.max_position_pct:g}% of the account per stock).</li>
+<li>Every buy gets an automatic <b>stop-loss {r.stop_loss_pct:g}% below entry</b>, held at the broker.</li>
+<li>Sell when sentiment flips below <b>{c.exit_score:+.2f}</b>, or after
+    <b>{c.max_hold_days} trading days</b>, whichever comes first.</li>
+<li>Hard safety rails can refuse any trade regardless of the strategy:
+    liquidity ≥ {_money(r.min_dollar_volume_20d)}/day traded, spread ≤ {r.max_spread_bps:g} bps,
+    ≤ {r.max_open_positions} open positions, ≤ {r.max_orders_per_day} orders/day,
+    daily loss ≤ {r.max_daily_loss_pct:g}% (else the kill switch trips).</li>
+</ol></div></details>"""
+
+
+def _check(label, value_txt, ok) -> str:
+    mark = "✓" if ok else ("✗" if ok is False else "·")
+    cls = "up" if ok else ("down" if ok is False else "muted")
+    return (f"<tr><td>{label}</td><td class=num>{value_txt}</td>"
+            f"<td class='num {cls}'>{mark}</td></tr>")
+
+
+def _evidence_html(d, settings: Settings) -> str:
+    """The expandable 'what the bot saw' block for one decision."""
+    inputs = json.loads(d["inputs_json"])
+    p = inputs.get("panel", {})
+    c, r = settings.strategy, settings.risk
+    score, mentions = p.get("score_mean"), p.get("n_mentions")
+    ret5, dv, spread = p.get("ret_5d"), p.get("dollar_volume_20d"), p.get("spread_bps")
+    rows = []
+    rows.append(_check(f"mentions in window (need ≥ {c.min_mentions})",
+                       mentions if mentions is not None else "—",
+                       None if mentions is None else mentions >= c.min_mentions))
+    rows.append(_check(f"avg sentiment (need ≥ {c.min_score:+.2f})",
+                       _fmt(score, digits=2) if score is not None else "—",
+                       None if score is None else score >= c.min_score))
+    rows.append(_check(f"5-day move (must be ≤ +{c.extended_ret_5d*100:.0f}%)",
+                       _fmt(ret5, pct=True) if ret5 is not None else "—",
+                       None if ret5 is None else ret5 <= c.extended_ret_5d))
+    rows.append(_check(f"daily $ traded (need ≥ {_money(r.min_dollar_volume_20d)})",
+                       _money(dv) if dv is not None else "—",
+                       None if dv is None else dv >= r.min_dollar_volume_20d))
+    rows.append(_check(f"bid/ask spread (max {r.max_spread_bps:g} bps)",
+                       f"{spread:.0f} bps" if spread is not None else "not measured",
+                       None if spread is None else spread <= r.max_spread_bps))
+    extra = []
+    if p.get("n_news") is not None and mentions:
+        extra.append(f"{p['n_news']} of {mentions} mentions were news articles"
+                     + (f" (news sentiment {_fmt(p.get('news_score_mean'), digits=2)})"
+                        if p.get("news_score_mean") is not None else ""))
+    if p.get("ext_sentiment_score") is not None:
+        extra.append(f"WSB sentiment (Tradestie): {_fmt(p['ext_sentiment_score'], digits=2)}")
+    if p.get("ext_mentions") is not None:
+        extra.append(f"WSB mention count (ApeWisdom): {p['ext_mentions']}")
+    if p.get("close") is not None:
+        px = f"price {_money(p['close'])}"
+        if p.get("ret_1d") is not None:
+            px += f", {p['ret_1d']*100:+.1f}% today"
+        if p.get("dist_from_20d_high") is not None:
+            px += f", {p['dist_from_20d_high']*100:+.1f}% vs 20-day high"
+        extra.append(px)
+    acct = inputs.get("account", {})
+    if acct:
+        extra.append(f"account at decision time: {_money(acct.get('equity'))} equity, "
+                     f"{acct.get('n_positions', 0)} positions open")
+    extra_html = ("<p class=explain style='margin:0.4rem 0 0'>" +
+                  " · ".join(extra) + "</p>") if extra else ""
+    return (f"<details style='margin:0.2rem 0 0'><summary style='font-size:0.8rem'>"
+            f"what the bot saw</summary>"
+            f"<table style='margin-top:4px'><tr><th>check</th>"
+            f"<th class=num>value</th><th class=num></th></tr>"
+            f"{''.join(rows)}</table>{extra_html}</details>")
+
+
+def _decisions_html(st, settings: Settings) -> str:
     if not st["decisions"]:
         return ("<div class=card><p class=explain>No decisions yet today. The bot "
                 "decides once per day at 15:45 New York time (about 15 minutes "
                 "before the market closes), based on the last 24 hours of chatter."
-                "</p></div>")
+                "</p></div>") + _rules_html(settings)
     acted = [d for d in st["decisions"] if d["action"] != "hold" or d["blocked_by"]]
-    holds = len(st["decisions"]) - len(acted)
+
+    def _score(d):
+        s = json.loads(d["inputs_json"]).get("panel", {}).get("score_mean")
+        return s if s is not None else -99
+
+    holds = [d for d in st["decisions"] if d["action"] == "hold" and not d["blocked_by"]]
+    holds_with_signal = sorted(
+        (d for d in holds
+         if json.loads(d["inputs_json"]).get("panel", {}).get("n_mentions")),
+        key=_score, reverse=True)[:12]
+    quiet_holds = len(holds) - len(holds_with_signal)
+
     rows = []
-    for d in acted:
+    for d in acted + holds_with_signal:
         panel = json.loads(d["inputs_json"]).get("panel", {})
         why = _reason(d["reason_code"])
-        score = panel.get("score_mean")
-        mentions = panel.get("n_mentions")
+        score, mentions = panel.get("score_mean"), panel.get("n_mentions")
         if score is not None and mentions:
             why += f" (score {score:+.2f} across {mentions} mentions)"
         if d["blocked_by"]:
-            act = f"<span class='badge b-warn'>🛡 blocked</span>"
+            act = "<span class='badge b-warn'>🛡 blocked</span>"
             why += f" — <b>stopped by a safety rail:</b> {RAILS.get(d['blocked_by'], d['blocked_by'])}"
         elif d["action"] == "buy":
             act = "<span class='badge b-good'>bought</span>"
-        else:
+        elif d["action"] == "sell":
             act = "<span class='badge b-crit'>sold</span>"
+        else:
+            act = "<span class='badge b-muted'>passed</span>"
         amount = _money(d["target_notional"]) if d["target_notional"] else "—"
         rows.append(f"<tr><td><b>{d['symbol']}</b></td><td>{act}</td>"
-                    f"<td class=num>{amount}</td><td class=explain>{why}</td></tr>")
+                    f"<td class=num>{amount}</td>"
+                    f"<td class=explain>{why}{_evidence_html(d, settings)}</td></tr>")
     body = (f"<table><tr><th>stock</th><th>action</th><th class=num>amount</th>"
-            f"<th>why</th></tr>{''.join(rows)}</table>") if rows else \
+            f"<th>why — expand each row for the evidence</th></tr>{''.join(rows)}</table>") if rows else \
         "<p class=explain>Nothing met the bar today — the bot did not trade.</p>"
-    return (f"<div class=card>{body}<p class=explain>{holds} other stocks were "
-            f"looked at and left alone. “Blocked” rows are trades the "
-            f"strategy wanted but a hard safety rule refused — recorded on purpose, "
-            f"so we can later judge whether the rails helped.</p></div>")
+    return (f"<div class=card>{body}<p class=explain>{quiet_holds} more stocks had "
+            f"little or no chatter and were left alone. “Blocked” rows are trades "
+            f"the strategy wanted but a hard safety rule refused — recorded on "
+            f"purpose, so we can later judge whether the rails helped. “Passed” "
+            f"rows are the near-misses: stocks with chatter that didn't clear the "
+            f"bar.</p></div>") + _rules_html(settings)
 
 
 def _fills_html(st) -> str:
@@ -459,7 +555,7 @@ def build(settings: Settings, conn: sqlite3.Connection,
 
     day = st["decision_day"] or "today"
     html.append(f"<h2>Decisions — {day}</h2>")
-    html.append(_decisions_html(st))
+    html.append(_decisions_html(st, settings))
     html.append(_fills_html(st))
 
     html.append(_research_html(conn, summary_lines))

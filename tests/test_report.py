@@ -67,3 +67,37 @@ def test_report_trading_sections(config_file, tmp_path):
     assert "stock trades too thinly" in html      # blocked counterfactual, in plain language
     assert "<svg" in html                         # equity curve rendered
     assert "http-equiv='refresh'" in html
+
+
+def test_decision_evidence_drilldown(config_file, tmp_path):
+    s = load_settings(config_file("paper"), env=PAPER_ENV)
+    conn = db.connect(s.db_path)
+    inputs = {
+        "panel": {"score_mean": 0.42, "n_mentions": 7, "ret_5d": 0.03,
+                  "dollar_volume_20d": 4.8e7, "spread_bps": 4.0, "n_news": 5,
+                  "news_score_mean": 0.38, "ext_sentiment_score": 0.12,
+                  "ext_mentions": 88, "close": 101.5, "ret_1d": 0.012,
+                  "dist_from_20d_high": -0.04},
+        "account": {"equity": 100000, "n_positions": 1},
+    }
+    conn.execute(
+        "INSERT INTO decisions (decision_utc, symbol, action, target_notional,"
+        " reason_code, inputs_json, blocked_by, strategy_version, mode) VALUES"
+        " (datetime('now'), 'TSLA', 'buy', 2000, 'sentiment_entry', ?, NULL, 'v0', 'paper')",
+        (json.dumps(inputs),))
+    # a near-miss hold with signal must also appear
+    conn.execute(
+        "INSERT INTO decisions (decision_utc, symbol, action, reason_code,"
+        " inputs_json, strategy_version, mode) VALUES"
+        " (datetime('now'), 'WEAK', 'hold', 'score_below_entry', ?, 'v0', 'paper')",
+        (json.dumps({"panel": {"score_mean": 0.1, "n_mentions": 4}, "account": {}}),))
+    conn.commit()
+    out = tmp_path / "index.html"
+    report.build(s, conn, out_path=out)
+    html = out.read_text()
+    assert "what the bot saw" in html
+    assert "avg sentiment (need ≥ +0.25)" in html
+    assert "5 of 7 mentions were news articles" in html
+    assert "WSB sentiment (Tradestie): 0.12" in html
+    assert "WEAK" in html and "passed" in html      # near-miss hold visible
+    assert "How the bot decides" in html            # rules card present
