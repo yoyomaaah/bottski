@@ -1,0 +1,9 @@
+[Unit]
+Description=Run bottski decide at 15:45 ET on weekdays
+
+[Timer]
+OnCalendar=Mon..Fri 15:45:00 America/New_York
+Persistent=false
+
+[Install]
+WantedBy=timers.target

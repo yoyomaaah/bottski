@@ -14,7 +14,6 @@ from bottski.store import db
 logger = logging.getLogger("bottski")
 
 NOT_IMPLEMENTED = {
-    "decide": "M5",
     "execute": "M6",
     "reconcile": "M6",
 }
@@ -82,6 +81,24 @@ def cmd_observe(settings: Settings, args: argparse.Namespace) -> int:
     )
     stats = panel.build(settings, conn, obs_date)
     print(stats)
+    return 0
+
+
+def cmd_decide(settings: Settings, args: argparse.Namespace) -> int:
+    """Dry-run strategy decisions for the latest (or given) panel date.
+    Reads the broker (read-only) for account state; never places orders."""
+    from bottski.broker.alpaca import get_account_state
+    from bottski.strategy import decide
+
+    conn = db.connect(settings.db_path)
+    obs_date = args.date or (
+        conn.execute("SELECT MAX(obs_date) m FROM observations").fetchone()["m"])
+    if not obs_date:
+        print("no panel yet — run observe first")
+        return 2
+    account = get_account_state(settings)
+    stats = decide.run(settings, conn, obs_date, account, mode="dry-run")
+    print(f"{obs_date}: {stats}")
     return 0
 
 
@@ -163,6 +180,8 @@ def main(argv: list[str] | None = None) -> int:
     p_obs.add_argument("--date", help="ET trading date (default: today)")
     sub.add_parser("backfill-returns", help="fill forward returns on past panel rows")
     sub.add_parser("report", help="write data/report.html with data status + signal metrics")
+    p_dec = sub.add_parser("decide", help="dry-run strategy decisions (never places orders)")
+    p_dec.add_argument("--date", help="panel date (default: latest)")
     sub.add_parser("status", help="mode, kill switch, db counts")
     sub.add_parser("halt", help="engage kill switch")
     sub.add_parser("resume", help="release kill switch")
@@ -180,6 +199,7 @@ def main(argv: list[str] | None = None) -> int:
         "observe": cmd_observe,
         "backfill-returns": cmd_backfill_returns,
         "report": cmd_report,
+        "decide": cmd_decide,
         "status": cmd_status,
         "halt": cmd_halt,
         "resume": cmd_resume,

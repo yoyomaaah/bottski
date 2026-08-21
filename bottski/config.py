@@ -32,6 +32,12 @@ class CollectConfig(BaseModel):
 
 class StrategyConfig(BaseModel):
     version: str = "v0"
+    min_mentions: int = 3
+    min_score: float = 0.25
+    exit_score: float = -0.25
+    max_new_positions_per_day: int = 3
+    max_hold_days: int = 5
+    extended_ret_5d: float = 0.10
 
 
 class RiskLimits(BaseModel):
