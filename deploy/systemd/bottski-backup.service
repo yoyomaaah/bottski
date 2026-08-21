@@ -1,0 +1,11 @@
+[Unit]
+Description=bottski nightly DB backup to R2
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=bottski
+WorkingDirectory=/home/bottski/bottski
+ExecStart=/home/bottski/bottski/deploy/backup.sh
+TimeoutStartSec=900
