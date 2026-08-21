@@ -67,6 +67,7 @@ class Settings(BaseModel):
     reddit_client_id: str = ""
     reddit_client_secret: str = ""
     reddit_user_agent: str = ""
+    adanos_api_key: str = ""
 
     @property
     def base_url(self) -> str:
@@ -145,4 +146,5 @@ def load_settings(
         reddit_client_id=env.get("REDDIT_CLIENT_ID", ""),
         reddit_client_secret=env.get("REDDIT_CLIENT_SECRET", ""),
         reddit_user_agent=env.get("REDDIT_USER_AGENT", ""),
+        adanos_api_key=env.get("ADANOS_API_KEY", ""),
     )

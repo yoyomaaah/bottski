@@ -1,0 +1,9 @@
+[Unit]
+Description=Run bottski Adanos pull at 15:35 ET on weekdays (before observe)
+
+[Timer]
+OnCalendar=Mon..Fri 15:35:00 America/New_York
+Persistent=false
+
+[Install]
+WantedBy=timers.target

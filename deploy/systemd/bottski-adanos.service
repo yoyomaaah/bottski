@@ -1,0 +1,11 @@
+[Unit]
+Description=bottski Adanos daily sentiment pull (quota-guarded)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=bottski
+WorkingDirectory=/home/bottski/bottski
+ExecStart=/home/bottski/bottski/deploy/run-job.sh adanos
+TimeoutStartSec=120

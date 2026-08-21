@@ -179,6 +179,16 @@ def cmd_backfill_returns(settings: Settings, args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_adanos(settings: Settings, args: argparse.Namespace) -> int:
+    """Once-daily Adanos trending pull (quota-guarded: 250 req/month tier)."""
+    from bottski.collect import external
+
+    conn = db.connect(settings.db_path)
+    stats = external.collect_adanos(settings, conn, force=args.force)
+    print(stats)
+    return 0
+
+
 def cmd_extract(settings: Settings, args: argparse.Namespace) -> int:
     from bottski.extract import tickers as extract_tickers
 
@@ -229,6 +239,8 @@ def main(argv: list[str] | None = None) -> int:
 
     sub.add_parser("collect", help="pull news + external sentiment, then extract tickers")
     sub.add_parser("extract", help="run ticker extraction on unprocessed documents")
+    p_ad = sub.add_parser("adanos", help="once-daily Adanos sentiment pull (quota-guarded)")
+    p_ad.add_argument("--force", action="store_true", help="pull even if already done today (spends quota)")
     p_obs = sub.add_parser("observe", help="build the observation panel for a trading day")
     p_obs.add_argument("--date", help="ET trading date (default: today)")
     sub.add_parser("backfill-returns", help="fill forward returns on past panel rows")
@@ -253,6 +265,7 @@ def main(argv: list[str] | None = None) -> int:
     handlers: dict[str, object] = {
         "collect": cmd_collect,
         "extract": cmd_extract,
+        "adanos": cmd_adanos,
         "observe": cmd_observe,
         "backfill-returns": cmd_backfill_returns,
         "report": cmd_report,

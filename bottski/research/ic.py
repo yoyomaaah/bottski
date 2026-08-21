@@ -35,6 +35,8 @@ SIGNALS = {
     # (2026-08-21, before any forward returns existed): NEGATIVE, i.e. the
     # retail-attention fade. Evaluated to test that expectation forward.
     "n_mentions": "n_mentions >= 1",
+    # Adanos continuous sentiment (top-20 trending/day, 49 subreddits).
+    "ext_adanos_sentiment": "ext_adanos_sentiment == ext_adanos_sentiment",
 }
 CONTROLS = ["ret_1d", "ret_5d", "log_dollar_volume"]
 

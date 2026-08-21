@@ -144,6 +144,7 @@ SIGNAL_NAMES = {
     "ext_sentiment_score": "WSB sentiment (Tradestie)",
     "mention_velocity": "Mention spikes",
     "n_mentions": "Attention level (mention count)",
+    "ext_adanos_sentiment": "Multi-subreddit sentiment (Adanos)",
 }
 
 

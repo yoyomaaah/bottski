@@ -15,6 +15,8 @@ _COLUMN_MIGRATIONS = [
     ("observations", "ext_mentions", "INTEGER"),
     ("observations", "ext_rank", "INTEGER"),
     ("observations", "ext_sentiment_score", "REAL"),
+    ("observations", "ext_adanos_sentiment", "REAL"),
+    ("observations", "ext_adanos_buzz", "REAL"),
 ]
 
 

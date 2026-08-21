@@ -70,3 +70,38 @@ def test_snapshots_accumulate_never_overwrite(config_file):
     n = conn.execute(
         "SELECT COUNT(*) c FROM external_sentiment WHERE symbol='TSLA'").fetchone()["c"]
     assert n == 2  # two snapshots, both kept
+
+
+def test_adanos_quota_guard(config_file):
+    import os
+    s = load_settings(config_file("paper"), env={**PAPER_ENV, "ADANOS_API_KEY": "k"})
+    conn = db.connect(s.db_path)
+    page = [{"ticker": "NVDA", "sentiment_score": 0.31, "mentions": 3164,
+             "total_upvotes": 24477, "trend": "falling", "buzz_score": 81.0},
+            {"ticker": "not a ticker", "sentiment_score": 0.1}]
+    calls = {"n": 0}
+
+    def fetch(url):
+        calls["n"] += 1
+        return page
+
+    stats = external.collect_adanos(s, conn, fetch=fetch)
+    assert stats["adanos_rows"] == 1 and calls["n"] == 1   # garbage ticker filtered
+    row = conn.execute("SELECT * FROM external_sentiment WHERE provider='adanos'").fetchone()
+    assert row["sentiment_score"] == 0.31 and row["mentions"] == 3164
+    import json
+    assert json.loads(row["raw_json"])["buzz_score"] == 81.0
+
+    # second call same day must NOT spend a request
+    stats2 = external.collect_adanos(s, conn, fetch=fetch)
+    assert stats2.get("skipped_quota") == 1 and calls["n"] == 1
+    # ...unless forced
+    external.collect_adanos(s, conn, fetch=fetch, force=True)
+    assert calls["n"] == 2
+
+
+def test_adanos_skips_without_key(config_file):
+    s = load_settings(config_file("paper"), env=PAPER_ENV)  # no ADANOS_API_KEY
+    conn = db.connect(s.db_path)
+    stats = external.collect_adanos(s, conn, fetch=lambda url: [])
+    assert stats.get("skipped") == 1

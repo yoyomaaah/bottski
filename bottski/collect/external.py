@@ -27,6 +27,11 @@ logger = logging.getLogger("bottski.collect.external")
 APEWISDOM_URL = "https://apewisdom.io/api/v1.0/filter/all-stocks/page/{page}"
 APEWISDOM_MAX_PAGES = 3  # 100/page; beyond ~300 the tail is noise
 TRADESTIE_URL = "https://tradestie.com/api/v1/apps/reddit"
+# Adanos: richer sentiment (continuous score, 49 subreddits) but a HARD quota
+# of 250 requests/month on the free tier. One trending call/day = 30/month;
+# NEVER put this in the 20-min collect loop. The once-per-day guard below
+# protects the budget from manual re-runs.
+ADANOS_TRENDING_URL = "https://api.adanos.org/reddit/stocks/v1/trending"
 TICKER_RE = re.compile(r"^[A-Z][A-Z0-9.\-]{0,9}$")
 
 
@@ -49,6 +54,45 @@ def _insert(conn: sqlite3.Connection, provider: str, fetched: str, symbol: str, 
          kw.get("sentiment_score"), kw.get("raw_json", "{}")),
     )
     return True
+
+
+def collect_adanos(settings: Settings, conn: sqlite3.Connection, fetch=None,
+                   force: bool = False) -> dict[str, int]:
+    """Once-daily pull of Adanos trending (top-20 fully-scored tickers).
+    Quota-guarded: refuses to spend a request if a snapshot already exists
+    for today's UTC date, unless force=True."""
+    if not settings.adanos_api_key:
+        logger.info("adanos: skipped — no ADANOS_API_KEY configured")
+        return {"adanos_rows": 0, "skipped": 1}
+    today = db.utcnow()[:10]
+    if not force:
+        existing = conn.execute(
+            "SELECT 1 FROM external_sentiment WHERE provider = 'adanos'"
+            " AND substr(fetched_utc, 1, 10) = ? LIMIT 1", (today,)).fetchone()
+        if existing:
+            logger.info("adanos: already pulled today (%s) — skipping to save quota", today)
+            return {"adanos_rows": 0, "skipped_quota": 1}
+
+    if fetch is None:
+        def fetch(url):
+            req = urllib.request.Request(
+                url, headers={"X-API-Key": settings.adanos_api_key,
+                              "User-Agent": "bottski/0.1 (research)"})
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                return json.loads(resp.read())
+
+    fetched = db.utcnow()
+    data = fetch(ADANOS_TRENDING_URL)
+    stats = {"adanos_rows": 0}
+    for r in data:
+        if _insert(conn, "adanos", fetched, r.get("ticker", ""),
+                   mentions=r.get("mentions"), upvotes=r.get("total_upvotes"),
+                   sentiment_score=r.get("sentiment_score"),
+                   sentiment_label=r.get("trend"), raw_json=json.dumps(r)):
+            stats["adanos_rows"] += 1
+    conn.commit()
+    logger.info("adanos collected: %s", stats)
+    return stats
 
 
 def collect_apewisdom(settings: Settings, conn: sqlite3.Connection, fetch=None) -> dict[str, int]:

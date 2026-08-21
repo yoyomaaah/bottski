@@ -92,6 +92,8 @@ CREATE TABLE IF NOT EXISTS observations (
     ext_mentions INTEGER,
     ext_rank INTEGER,
     ext_sentiment_score REAL,
+    ext_adanos_sentiment REAL,
+    ext_adanos_buzz REAL,
 
     fwd_ret_1d REAL,
     fwd_ret_3d REAL,

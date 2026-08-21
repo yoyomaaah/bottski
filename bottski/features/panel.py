@@ -54,7 +54,9 @@ def _sentiment_features(conn, start_utc, end_utc) -> dict[str, dict]:
 
 def _external_features(conn, end_utc) -> dict[str, dict]:
     out: dict[str, dict] = {}
-    for provider, cols in (("apewisdom", ("mentions", "rank")), ("tradestie", ("sentiment_score",))):
+    for provider, cols in (("apewisdom", ("mentions", "rank")),
+                           ("tradestie", ("sentiment_score",)),
+                           ("adanos", ("sentiment_score",))):
         latest = conn.execute(
             "SELECT MAX(fetched_utc) m FROM external_sentiment WHERE provider = ? AND fetched_utc <= ?",
             (provider, end_utc),
@@ -69,8 +71,15 @@ def _external_features(conn, end_utc) -> dict[str, dict]:
             if provider == "apewisdom":
                 d["ext_mentions"] = r["mentions"]
                 d["ext_rank"] = r["rank"]
-            else:
+            elif provider == "tradestie":
                 d["ext_sentiment_score"] = r["sentiment_score"]
+            else:  # adanos
+                d["ext_adanos_sentiment"] = r["sentiment_score"]
+                import json as _json
+                try:
+                    d["ext_adanos_buzz"] = _json.loads(r["raw_json"]).get("buzz_score")
+                except Exception:
+                    d["ext_adanos_buzz"] = None
     return out
 
 
@@ -195,6 +204,8 @@ def build(settings: Settings, conn: sqlite3.Connection, obs_date: date,
             "ext_mentions": e.get("ext_mentions"),
             "ext_rank": e.get("ext_rank"),
             "ext_sentiment_score": e.get("ext_sentiment_score"),
+            "ext_adanos_sentiment": e.get("ext_adanos_sentiment"),
+            "ext_adanos_buzz": e.get("ext_adanos_buzz"),
         }
         cols = ", ".join(row)
         placeholders = ", ".join("?" for _ in row)
