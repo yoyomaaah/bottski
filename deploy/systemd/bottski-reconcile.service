@@ -1,0 +1,11 @@
+[Unit]
+Description=bottski reconcile (post-close fill sync + position/equity snapshot)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=bottski
+WorkingDirectory=/home/bottski/bottski
+ExecStart=/home/bottski/bottski/deploy/run-job.sh reconcile
+TimeoutStartSec=300
