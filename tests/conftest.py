@@ -1,3 +1,11 @@
+import sys
+from pathlib import Path
+
+# Guard against the macOS UF_HIDDEN .pth issue: this CPython skips "hidden"
+# .pth files, which can silently break the editable install after a uv resync.
+# (Fix for the venv itself: chflags nohidden .venv/lib/python*/site-packages/*.pth)
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 import pytest
 
 

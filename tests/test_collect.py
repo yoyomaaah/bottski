@@ -60,23 +60,29 @@ class FakeReddit:
         return FakeSubreddit(self._posts)
 
 
-class FakeNewsClient:
-    def __init__(self, articles):
-        self._articles = articles
+class FakeNewsFetch:
+    """Mimics the raw REST endpoint: pages of dicts + next_page_token."""
+
+    def __init__(self, pages):
+        self._pages = pages
         self.requests_seen = []
 
-    def get_news(self, req):
-        self.requests_seen.append(req)
-        return SimpleNamespace(data={"news": self._articles}, next_page_token=None)
+    def __call__(self, params):
+        self.requests_seen.append(params)
+        i = len(self.requests_seen) - 1
+        page = self._pages[i] if i < len(self._pages) else []
+        more = i + 1 < len(self._pages)
+        return {"news": page, "next_page_token": f"tok{i}" if more else None}
 
 
 def make_article(i, created=None):
-    return SimpleNamespace(
-        id=1000 + i, headline=f"headline {i}", summary=f"summary {i}", content="",
-        symbols=["AAPL", "TSLA"], source="benzinga",
-        created_at=created or datetime(2026, 8, 21, 10, i, tzinfo=timezone.utc),
-        url=f"https://example.com/{i}",
-    )
+    created = created or datetime(2026, 8, 21, 10, i, tzinfo=timezone.utc)
+    return {
+        "id": 1000 + i, "headline": f"headline {i}", "summary": f"summary {i}",
+        "content": "", "symbols": ["AAPL", "TSLA"], "source": "benzinga",
+        "created_at": created.isoformat().replace("+00:00", "Z"),
+        "url": f"https://example.com/{i}",
+    }
 
 
 def _settings(config_file):
@@ -152,11 +158,10 @@ def test_reddit_one_bad_subreddit_does_not_stop_the_rest(config_file):
 def test_news_collect_is_idempotent_and_stores_symbols(config_file):
     s = _settings(config_file)
     conn = db.connect(s.db_path)
-    client = FakeNewsClient([make_article(i) for i in range(4)])
 
-    stats1 = news_mod.collect(s, conn, client=client)
+    stats1 = news_mod.collect(s, conn, fetch=FakeNewsFetch([[make_article(i) for i in range(4)]]))
     assert stats1["news_new"] == 4
-    stats2 = news_mod.collect(s, conn, client=client)
+    stats2 = news_mod.collect(s, conn, fetch=FakeNewsFetch([[make_article(i) for i in range(4)]]))
     assert stats2["news_new"] == 0
     assert conn.execute("SELECT COUNT(*) c FROM raw_documents").fetchone()["c"] == 4
 
@@ -164,15 +169,26 @@ def test_news_collect_is_idempotent_and_stores_symbols(config_file):
     assert json.loads(row["raw_json"])["symbols"] == ["AAPL", "TSLA"]
 
 
+def test_news_follows_pagination_tokens(config_file):
+    s = _settings(config_file)
+    conn = db.connect(s.db_path)
+    pages = [[make_article(i)] for i in range(3)]  # 3 pages, 1 article each
+    fetch = FakeNewsFetch(pages)
+    stats = news_mod.collect(s, conn, fetch=fetch)
+    assert stats["news_new"] == 3 and stats["pages"] == 3
+    assert "page_token" not in fetch.requests_seen[0]
+    assert fetch.requests_seen[1]["page_token"] == "tok0"
+    assert fetch.requests_seen[2]["page_token"] == "tok1"
+
+
 def test_news_watermark_advances_and_is_reused(config_file):
     s = _settings(config_file)
     conn = db.connect(s.db_path)
     latest = datetime(2026, 8, 21, 12, 0, tzinfo=timezone.utc)
-    client = FakeNewsClient([make_article(1, created=latest)])
-    news_mod.collect(s, conn, client=client)
+    news_mod.collect(s, conn, fetch=FakeNewsFetch([[make_article(1, created=latest)]]))
     assert db.get_control(conn, news_mod.WATERMARK_KEY) == "2026-08-21T12:00:00+00:00"
 
-    client2 = FakeNewsClient([])
-    news_mod.collect(s, conn, client=client2)
-    req = client2.requests_seen[0]
-    assert req.start == latest - news_mod.OVERLAP  # incremental with overlap
+    fetch2 = FakeNewsFetch([[]])
+    news_mod.collect(s, conn, fetch=fetch2)
+    expected_start = (latest - news_mod.OVERLAP).isoformat().replace("+00:00", "Z")
+    assert fetch2.requests_seen[0]["start"] == expected_start  # incremental with overlap

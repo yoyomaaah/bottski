@@ -29,15 +29,18 @@ def cmd_collect(settings: Settings, args: argparse.Namespace) -> int:
     so the scheduler's healthcheck ping is withheld."""
     conn = db.connect(settings.db_path)
     ok = True
-    try:
-        from bottski.collect import reddit as reddit_collector
+    if not settings.reddit_client_id:
+        logger.warning("reddit: skipped — no credentials configured (awaiting API approval)")
+    else:
+        try:
+            from bottski.collect import reddit as reddit_collector
 
-        stats = reddit_collector.collect(settings, conn)
-        logger.info("reddit done: %s", stats)
-        ok = ok and stats.get("errors", 0) == 0
-    except Exception:
-        logger.exception("reddit collection failed")
-        ok = False
+            stats = reddit_collector.collect(settings, conn)
+            logger.info("reddit done: %s", stats)
+            ok = ok and stats.get("errors", 0) == 0
+        except Exception:
+            logger.exception("reddit collection failed")
+            ok = False
     try:
         from bottski.collect import news as news_collector
 
