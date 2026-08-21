@@ -33,6 +33,7 @@ class Candidate:
     spread_bps: float | None
     is_tradable: bool = True
     is_halted: bool = False
+    blacklisted: bool = False  # user exclusion (sector or symbol); buys only
 
 
 def check(
@@ -58,6 +59,8 @@ def check(
     if c.side == "sell":
         return None
 
+    if c.blacklisted:
+        return "blacklist"
     if account.day_start_equity:
         loss_pct = (account.day_start_equity - account.equity) / account.day_start_equity * 100
         if loss_pct >= limits.max_daily_loss_pct:

@@ -1,224 +1,224 @@
-symbol,name,aliases
-SPY,SPDR S&P 500 ETF,s&p 500
-QQQ,Invesco QQQ ETF,nasdaq 100
-IWM,iShares Russell 2000 ETF,russell 2000
-DIA,SPDR Dow Jones ETF,dow jones
-VTI,Vanguard Total Market ETF,
-VOO,Vanguard S&P 500 ETF,
-TLT,iShares 20+ Year Treasury ETF,
-GLD,SPDR Gold Shares,
-SLV,iShares Silver Trust,
-USO,United States Oil Fund,
-XLE,Energy Select SPDR,
-XLF,Financial Select SPDR,
-XLK,Technology Select SPDR,
-SQQQ,ProShares UltraPro Short QQQ,
-TQQQ,ProShares UltraPro QQQ,
-SSO,ProShares Ultra S&P 500,
-VXX,iPath VIX ETN,
-UVXY,ProShares Ultra VIX,
-SOXX,iShares Semiconductor ETF,
-SMH,VanEck Semiconductor ETF,
-ARKK,ARK Innovation ETF,ark invest
-BITO,ProShares Bitcoin ETF,
-IBIT,iShares Bitcoin Trust,
-AAPL,Apple,apple;iphone maker
-MSFT,Microsoft,microsoft
-GOOGL,Alphabet Class A,alphabet;google
-GOOG,Alphabet Class C,
-AMZN,Amazon,amazon
-NVDA,NVIDIA,nvidia
-META,Meta Platforms,facebook;instagram
-TSLA,Tesla,tesla
-AVGO,Broadcom,broadcom
-AMD,Advanced Micro Devices,
-INTC,Intel,intel
-MU,Micron Technology,micron
-QCOM,Qualcomm,qualcomm
-TXN,Texas Instruments,texas instruments
-ARM,Arm Holdings,
-TSM,Taiwan Semiconductor,tsmc;taiwan semi
-ASML,ASML Holding,asml
-SMCI,Super Micro Computer,supermicro
-PLTR,Palantir,palantir
-ORCL,Oracle,oracle
-CRM,Salesforce,salesforce
-ADBE,Adobe,adobe
-NFLX,Netflix,netflix
-DIS,Walt Disney,disney
-CMCSA,Comcast,comcast
-T,AT&T,at&t
-VZ,Verizon,verizon
-TMUS,T-Mobile US,t-mobile
-IBM,IBM,
-CSCO,Cisco Systems,cisco
-NOW,ServiceNow,servicenow
-SNOW,Snowflake,snowflake
-DDOG,Datadog,datadog
-NET,Cloudflare,cloudflare
-CRWD,CrowdStrike,crowdstrike
-PANW,Palo Alto Networks,palo alto networks
-ZS,Zscaler,zscaler
-MDB,MongoDB,mongodb
-SHOP,Shopify,shopify
-XYZ,Block,block inc
-PYPL,PayPal,paypal
-COIN,Coinbase,coinbase
-HOOD,Robinhood,robinhood
-MSTR,MicroStrategy,microstrategy
-SOFI,SoFi Technologies,sofi
-AFRM,Affirm,affirm
-UPST,Upstart,upstart
-V,Visa,
-MA,Mastercard,mastercard
-AXP,American Express,american express
-JPM,JPMorgan Chase,jpmorgan;jp morgan
-BAC,Bank of America,bank of america
-WFC,Wells Fargo,wells fargo
-C,Citigroup,citigroup
-GS,Goldman Sachs,goldman sachs
-MS,Morgan Stanley,morgan stanley
-SCHW,Charles Schwab,schwab
-BLK,BlackRock,blackrock
-BX,Blackstone,blackstone
-KKR,KKR & Co,
-BRK.B,Berkshire Hathaway,berkshire
-UNH,UnitedHealth,unitedhealth
-JNJ,Johnson & Johnson,johnson & johnson
-LLY,Eli Lilly,eli lilly
-PFE,Pfizer,pfizer
-MRK,Merck,merck
-ABBV,AbbVie,abbvie
-BMY,Bristol-Myers Squibb,bristol-myers
-AMGN,Amgen,amgen
-GILD,Gilead Sciences,gilead
-MRNA,Moderna,moderna
-BNTX,BioNTech,biontech
-NVO,Novo Nordisk,novo nordisk
-CVS,CVS Health,
-HIMS,Hims & Hers Health,hims
-WMT,Walmart,walmart
-COST,Costco,costco
-TGT,Target,
-HD,Home Depot,home depot
-LOW,Lowe's,lowe's
-MCD,McDonald's,mcdonald's
-SBUX,Starbucks,starbucks
-CMG,Chipotle,chipotle
-NKE,Nike,nike
-LULU,Lululemon,lululemon
-KO,Coca-Cola,coca-cola
-PEP,PepsiCo,pepsico
-PG,Procter & Gamble,procter
-CL,Colgate-Palmolive,colgate
-KHC,Kraft Heinz,kraft heinz
-MDLZ,Mondelez,mondelez
-PM,Philip Morris,philip morris
-MO,Altria,altria
-XOM,Exxon Mobil,exxon
-CVX,Chevron,chevron
-COP,ConocoPhillips,conocophillips
-OXY,Occidental Petroleum,occidental
-SLB,Schlumberger,schlumberger
-BA,Boeing,boeing
-LMT,Lockheed Martin,lockheed
-RTX,RTX Corp,raytheon
-NOC,Northrop Grumman,northrop
-GD,General Dynamics,general dynamics
-GE,GE Aerospace,general electric
-HON,Honeywell,honeywell
-CAT,Caterpillar,caterpillar
-DE,Deere,john deere
-MMM,3M,3m
-UPS,United Parcel Service,
-FDX,FedEx,fedex
-UNP,Union Pacific,union pacific
-DAL,Delta Air Lines,delta air
-UAL,United Airlines,united airlines
-AAL,American Airlines,american airlines
-LUV,Southwest Airlines,southwest airlines
-ABNB,Airbnb,airbnb
-BKNG,Booking Holdings,booking.com
-MAR,Marriott,marriott
-CCL,Carnival,carnival cruise
-RCL,Royal Caribbean,royal caribbean
-NCLH,Norwegian Cruise Line,norwegian cruise
-F,Ford Motor,ford
-GM,General Motors,general motors
-STLA,Stellantis,stellantis
-RIVN,Rivian,rivian
-LCID,Lucid Group,lucid motors
-NIO,NIO,
-XPEV,XPeng,xpeng
-LI,Li Auto,li auto
-TM,Toyota Motor,toyota
-UBER,Uber Technologies,uber
-LYFT,Lyft,lyft
-DASH,DoorDash,doordash
-ZM,Zoom Communications,zoom
-DOCU,DocuSign,docusign
-TWLO,Twilio,twilio
-PINS,Pinterest,pinterest
-SNAP,Snap Inc,snapchat
-RBLX,Roblox,roblox
-U,Unity Software,unity software
-TTWO,Take-Two Interactive,take-two
-EA,Electronic Arts,electronic arts
-GME,GameStop,gamestop
-AMC,AMC Entertainment,amc theatres
-BB,BlackBerry,blackberry
-BBAI,BigBear.ai,bigbear
-CHPT,ChargePoint,chargepoint
-PLUG,Plug Power,plug power
-FCEL,FuelCell Energy,fuelcell
-RUN,Sunrun,sunrun
-ENPH,Enphase Energy,enphase
-SEDG,SolarEdge,solaredge
-FSLR,First Solar,first solar
-NEE,NextEra Energy,nextera
-DUK,Duke Energy,duke energy
-SO,Southern Company,
-D,Dominion Energy,dominion energy
-VST,Vistra,vistra
-CEG,Constellation Energy,constellation energy
-SMR,NuScale Power,nuscale
-OKLO,Oklo,oklo
-LEU,Centrus Energy,centrus
-CCJ,Cameco,cameco
-RKLB,Rocket Lab,rocket lab
-LUNR,Intuitive Machines,intuitive machines
-ASTS,AST SpaceMobile,ast spacemobile
-SPCE,Virgin Galactic,virgin galactic
-JOBY,Joby Aviation,joby
-ACHR,Archer Aviation,archer aviation
-AI,C3.ai,c3.ai
-BBBY,Bed Bath & Beyond,bed bath
-DJT,Trump Media,trump media;truth social
-PHUN,Phunware,phunware
-MARA,MARA Holdings,marathon digital
-RIOT,Riot Platforms,riot blockchain
-CLSK,CleanSpark,cleanspark
-HUT,Hut 8,hut 8
-TLRY,Tilray,tilray
-CGC,Canopy Growth,canopy growth
-ACB,Aurora Cannabis,aurora cannabis
-SNDL,SNDL Inc,sundial
-CRSP,CRISPR Therapeutics,crispr
-NTLA,Intellia Therapeutics,intellia
-EDIT,Editas Medicine,editas
-BEAM,Beam Therapeutics,beam therapeutics
-NVAX,Novavax,novavax
-INTU,Intuit,intuit
-AMAT,Applied Materials,applied materials
-LRCX,Lam Research,lam research
-KLAC,KLA Corp,kla-tencor
-ADI,Analog Devices,analog devices
-MRVL,Marvell Technology,marvell
-ON,ON Semiconductor,onsemi
-WDC,Western Digital,western digital
-STX,Seagate,seagate
-DELL,Dell Technologies,dell
-HPQ,HP Inc,
-HPE,Hewlett Packard Enterprise,
-VRT,Vertiv,vertiv
-ANET,Arista Networks,arista
+symbol,name,aliases,sector
+SPY,SPDR S&P 500 ETF,s&p 500,etf
+QQQ,Invesco QQQ ETF,nasdaq 100,etf
+IWM,iShares Russell 2000 ETF,russell 2000,etf
+DIA,SPDR Dow Jones ETF,dow jones,etf
+VTI,Vanguard Total Market ETF,,etf
+VOO,Vanguard S&P 500 ETF,,etf
+TLT,iShares 20+ Year Treasury ETF,,etf
+GLD,SPDR Gold Shares,,etf
+SLV,iShares Silver Trust,,etf
+USO,United States Oil Fund,,energy
+XLE,Energy Select SPDR,,energy
+XLF,Financial Select SPDR,,etf
+XLK,Technology Select SPDR,,etf
+SQQQ,ProShares UltraPro Short QQQ,,etf
+TQQQ,ProShares UltraPro QQQ,,etf
+SSO,ProShares Ultra S&P 500,,etf
+VXX,iPath VIX ETN,,etf
+UVXY,ProShares Ultra VIX,,etf
+SOXX,iShares Semiconductor ETF,,etf
+SMH,VanEck Semiconductor ETF,,etf
+ARKK,ARK Innovation ETF,ark invest,etf
+BITO,ProShares Bitcoin ETF,,crypto
+IBIT,iShares Bitcoin Trust,,crypto
+AAPL,Apple,apple;iphone maker,tech
+MSFT,Microsoft,microsoft,tech
+GOOGL,Alphabet Class A,alphabet;google,tech
+GOOG,Alphabet Class C,,tech
+AMZN,Amazon,amazon,tech
+NVDA,NVIDIA,nvidia,semis
+META,Meta Platforms,facebook;instagram,tech
+TSLA,Tesla,tesla,auto
+AVGO,Broadcom,broadcom,semis
+AMD,Advanced Micro Devices,,semis
+INTC,Intel,intel,semis
+MU,Micron Technology,micron,semis
+QCOM,Qualcomm,qualcomm,semis
+TXN,Texas Instruments,texas instruments,semis
+ARM,Arm Holdings,,semis
+TSM,Taiwan Semiconductor,tsmc;taiwan semi,semis
+ASML,ASML Holding,asml,semis
+SMCI,Super Micro Computer,supermicro,semis
+PLTR,Palantir,palantir,tech
+ORCL,Oracle,oracle,tech
+CRM,Salesforce,salesforce,tech
+ADBE,Adobe,adobe,tech
+NFLX,Netflix,netflix,internet-media
+DIS,Walt Disney,disney,internet-media
+CMCSA,Comcast,comcast,internet-media
+T,AT&T,at&t,telecom
+VZ,Verizon,verizon,telecom
+TMUS,T-Mobile US,t-mobile,telecom
+IBM,IBM,,tech
+CSCO,Cisco Systems,cisco,tech
+NOW,ServiceNow,servicenow,tech
+SNOW,Snowflake,snowflake,tech
+DDOG,Datadog,datadog,tech
+NET,Cloudflare,cloudflare,tech
+CRWD,CrowdStrike,crowdstrike,tech
+PANW,Palo Alto Networks,palo alto networks,tech
+ZS,Zscaler,zscaler,tech
+MDB,MongoDB,mongodb,tech
+SHOP,Shopify,shopify,tech
+XYZ,Block,block inc,finance
+PYPL,PayPal,paypal,finance
+COIN,Coinbase,coinbase,crypto
+HOOD,Robinhood,robinhood,finance
+MSTR,MicroStrategy,microstrategy,crypto
+SOFI,SoFi Technologies,sofi,finance
+AFRM,Affirm,affirm,finance
+UPST,Upstart,upstart,finance
+V,Visa,,finance
+MA,Mastercard,mastercard,finance
+AXP,American Express,american express,finance
+JPM,JPMorgan Chase,jpmorgan;jp morgan,finance
+BAC,Bank of America,bank of america,finance
+WFC,Wells Fargo,wells fargo,finance
+C,Citigroup,citigroup,finance
+GS,Goldman Sachs,goldman sachs,finance
+MS,Morgan Stanley,morgan stanley,finance
+SCHW,Charles Schwab,schwab,finance
+BLK,BlackRock,blackrock,finance
+BX,Blackstone,blackstone,finance
+KKR,KKR & Co,,finance
+BRK.B,Berkshire Hathaway,berkshire,finance
+UNH,UnitedHealth,unitedhealth,healthcare
+JNJ,Johnson & Johnson,johnson & johnson,healthcare
+LLY,Eli Lilly,eli lilly,healthcare
+PFE,Pfizer,pfizer,healthcare
+MRK,Merck,merck,healthcare
+ABBV,AbbVie,abbvie,healthcare
+BMY,Bristol-Myers Squibb,bristol-myers,healthcare
+AMGN,Amgen,amgen,healthcare
+GILD,Gilead Sciences,gilead,healthcare
+MRNA,Moderna,moderna,healthcare
+BNTX,BioNTech,biontech,healthcare
+NVO,Novo Nordisk,novo nordisk,healthcare
+CVS,CVS Health,,healthcare
+HIMS,Hims & Hers Health,hims,healthcare
+WMT,Walmart,walmart,retail
+COST,Costco,costco,retail
+TGT,Target,,retail
+HD,Home Depot,home depot,retail
+LOW,Lowe's,lowe's,retail
+MCD,McDonald's,mcdonald's,retail
+SBUX,Starbucks,starbucks,retail
+CMG,Chipotle,chipotle,retail
+NKE,Nike,nike,retail
+LULU,Lululemon,lululemon,retail
+KO,Coca-Cola,coca-cola,food-bev
+PEP,PepsiCo,pepsico,food-bev
+PG,Procter & Gamble,procter,food-bev
+CL,Colgate-Palmolive,colgate,food-bev
+KHC,Kraft Heinz,kraft heinz,food-bev
+MDLZ,Mondelez,mondelez,food-bev
+PM,Philip Morris,philip morris,tobacco
+MO,Altria,altria,tobacco
+XOM,Exxon Mobil,exxon,energy
+CVX,Chevron,chevron,energy
+COP,ConocoPhillips,conocophillips,energy
+OXY,Occidental Petroleum,occidental,energy
+SLB,Schlumberger,schlumberger,energy
+BA,Boeing,boeing,aerospace
+LMT,Lockheed Martin,lockheed,defense
+RTX,RTX Corp,raytheon,defense
+NOC,Northrop Grumman,northrop,defense
+GD,General Dynamics,general dynamics,defense
+GE,GE Aerospace,general electric,aerospace
+HON,Honeywell,honeywell,industrials
+CAT,Caterpillar,caterpillar,industrials
+DE,Deere,john deere,industrials
+MMM,3M,3m,industrials
+UPS,United Parcel Service,,industrials
+FDX,FedEx,fedex,industrials
+UNP,Union Pacific,union pacific,industrials
+DAL,Delta Air Lines,delta air,aviation
+UAL,United Airlines,united airlines,aviation
+AAL,American Airlines,american airlines,aviation
+LUV,Southwest Airlines,southwest airlines,aviation
+ABNB,Airbnb,airbnb,internet-media
+BKNG,Booking Holdings,booking.com,internet-media
+MAR,Marriott,marriott,travel
+CCL,Carnival,carnival cruise,travel
+RCL,Royal Caribbean,royal caribbean,travel
+NCLH,Norwegian Cruise Line,norwegian cruise,travel
+F,Ford Motor,ford,auto
+GM,General Motors,general motors,auto
+STLA,Stellantis,stellantis,auto
+RIVN,Rivian,rivian,auto
+LCID,Lucid Group,lucid motors,auto
+NIO,NIO,,auto
+XPEV,XPeng,xpeng,auto
+LI,Li Auto,li auto,auto
+TM,Toyota Motor,toyota,auto
+UBER,Uber Technologies,uber,internet-media
+LYFT,Lyft,lyft,internet-media
+DASH,DoorDash,doordash,internet-media
+ZM,Zoom Communications,zoom,tech
+DOCU,DocuSign,docusign,tech
+TWLO,Twilio,twilio,tech
+PINS,Pinterest,pinterest,internet-media
+SNAP,Snap Inc,snapchat,internet-media
+RBLX,Roblox,roblox,internet-media
+U,Unity Software,unity software,tech
+TTWO,Take-Two Interactive,take-two,internet-media
+EA,Electronic Arts,electronic arts,internet-media
+GME,GameStop,gamestop,retail
+AMC,AMC Entertainment,amc theatres,retail
+BB,BlackBerry,blackberry,tech
+BBAI,BigBear.ai,bigbear,tech
+CHPT,ChargePoint,chargepoint,clean-energy
+PLUG,Plug Power,plug power,clean-energy
+FCEL,FuelCell Energy,fuelcell,clean-energy
+RUN,Sunrun,sunrun,clean-energy
+ENPH,Enphase Energy,enphase,clean-energy
+SEDG,SolarEdge,solaredge,clean-energy
+FSLR,First Solar,first solar,clean-energy
+NEE,NextEra Energy,nextera,utilities
+DUK,Duke Energy,duke energy,utilities
+SO,Southern Company,,utilities
+D,Dominion Energy,dominion energy,utilities
+VST,Vistra,vistra,utilities
+CEG,Constellation Energy,constellation energy,utilities
+SMR,NuScale Power,nuscale,utilities
+OKLO,Oklo,oklo,utilities
+LEU,Centrus Energy,centrus,utilities
+CCJ,Cameco,cameco,utilities
+RKLB,Rocket Lab,rocket lab,space
+LUNR,Intuitive Machines,intuitive machines,space
+ASTS,AST SpaceMobile,ast spacemobile,space
+SPCE,Virgin Galactic,virgin galactic,space
+JOBY,Joby Aviation,joby,aviation
+ACHR,Archer Aviation,archer aviation,aviation
+AI,C3.ai,c3.ai,tech
+BBBY,Bed Bath & Beyond,bed bath,retail
+DJT,Trump Media,trump media;truth social,internet-media
+PHUN,Phunware,phunware,tech
+MARA,MARA Holdings,marathon digital,crypto
+RIOT,Riot Platforms,riot blockchain,crypto
+CLSK,CleanSpark,cleanspark,crypto
+HUT,Hut 8,hut 8,crypto
+TLRY,Tilray,tilray,cannabis
+CGC,Canopy Growth,canopy growth,cannabis
+ACB,Aurora Cannabis,aurora cannabis,cannabis
+SNDL,SNDL Inc,sundial,cannabis
+CRSP,CRISPR Therapeutics,crispr,biotech
+NTLA,Intellia Therapeutics,intellia,biotech
+EDIT,Editas Medicine,editas,biotech
+BEAM,Beam Therapeutics,beam therapeutics,biotech
+NVAX,Novavax,novavax,biotech
+INTU,Intuit,intuit,tech
+AMAT,Applied Materials,applied materials,semis
+LRCX,Lam Research,lam research,semis
+KLAC,KLA Corp,kla-tencor,semis
+ADI,Analog Devices,analog devices,semis
+MRVL,Marvell Technology,marvell,semis
+ON,ON Semiconductor,onsemi,semis
+WDC,Western Digital,western digital,semis
+STX,Seagate,seagate,semis
+DELL,Dell Technologies,dell,tech
+HPQ,HP Inc,,tech
+HPE,Hewlett Packard Enterprise,,tech
+VRT,Vertiv,vertiv,tech
+ANET,Arista Networks,arista,tech

@@ -139,6 +139,28 @@ def cmd_reconcile(settings: Settings, args: argparse.Namespace) -> int:
     return 1 if result.get("mismatch") else 0
 
 
+def cmd_blacklist(settings: Settings, args: argparse.Namespace) -> int:
+    from bottski.risk.blacklist import Blacklist
+
+    path = settings.blacklist_file
+    if args.entry and args.op in ("add", "remove"):
+        entry = args.entry.strip()
+        entry = entry.upper() if not entry.lower().startswith("sector:") else entry.lower()
+        lines = []
+        if path.exists():
+            lines = [l for l in path.read_text().splitlines()]
+        current = [l.strip() for l in lines if l.strip() and not l.strip().startswith("#")]
+        if args.op == "add" and entry not in current:
+            lines.append(entry)
+        elif args.op == "remove":
+            lines = [l for l in lines if l.strip() != entry]
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("\n".join(lines) + "\n")
+    bl = Blacklist.load(path)
+    print(f"blacklist ({path}): {bl.describe()}")
+    return 0
+
+
 def cmd_report(settings: Settings, args: argparse.Namespace) -> int:
     from bottski.research import report
 
@@ -217,6 +239,9 @@ def main(argv: list[str] | None = None) -> int:
                        help="record decisions as dry-run so execute ignores them")
     sub.add_parser("execute", help="place orders for today's unblocked decisions (reconciles first)")
     sub.add_parser("reconcile", help="sync fills, compare positions vs broker; halt on mismatch")
+    p_bl = sub.add_parser("blacklist", help="show or edit the never-buy list")
+    p_bl.add_argument("op", nargs="?", choices=["list", "add", "remove"], default="list")
+    p_bl.add_argument("entry", nargs="?", help="SYMBOL or sector:<name>")
     sub.add_parser("status", help="mode, kill switch, db counts")
     sub.add_parser("halt", help="engage kill switch")
     sub.add_parser("resume", help="release kill switch")
@@ -234,6 +259,7 @@ def main(argv: list[str] | None = None) -> int:
         "decide": cmd_decide,
         "execute": cmd_execute,
         "reconcile": cmd_reconcile,
+        "blacklist": cmd_blacklist,
         "status": cmd_status,
         "halt": cmd_halt,
         "resume": cmd_resume,

@@ -104,6 +104,7 @@ RAILS = {
     "max_orders_per_day": "daily order limit",
     "max_daily_loss": "daily loss limit was hit",
     "halted": "trading is halted in this stock",
+    "blacklist": "on your never-buy list",
     "not_tradable": "not tradable at the broker",
 }
 SIGNAL_NAMES = {
@@ -291,6 +292,12 @@ def _positions_html(st) -> str:
             f"has an automatic stop-loss 8% below entry, held at the broker</p></div>")
 
 
+def _blacklist_desc(settings: Settings) -> str:
+    from bottski.risk.blacklist import Blacklist
+
+    return Blacklist.load(settings.blacklist_file).describe()
+
+
 def _rules_html(settings: Settings) -> str:
     c, r = settings.strategy, settings.risk
     return f"""
@@ -306,6 +313,8 @@ def _rules_html(settings: Settings) -> str:
 <li>Every buy gets an automatic <b>stop-loss {r.stop_loss_pct:g}% below entry</b>, held at the broker.</li>
 <li>Sell when sentiment flips below <b>{c.exit_score:+.2f}</b>, or after
     <b>{c.max_hold_days} trading days</b>, whichever comes first.</li>
+<li>Never buys anything on the exclusion list: <b>{_blacklist_desc(settings)}</b>
+    (excluded names stay in the research data — they just can't be bought).</li>
 <li>Hard safety rails can refuse any trade regardless of the strategy:
     liquidity ≥ {_money(r.min_dollar_volume_20d)}/day traded, spread ≤ {r.max_spread_bps:g} bps,
     ≤ {r.max_open_positions} open positions, ≤ {r.max_orders_per_day} orders/day,

@@ -4,6 +4,7 @@ mode = "paper"          # "paper" | "live". Live additionally requires BOTTSKI_L
 db_path = "data/bottski.db"
 kill_switch_file = "data/KILL"
 universe_file = "universe.csv"
+blacklist_file = "data/blacklist.txt"  # never-buy list: symbols and sector:<name> lines
 
 [collect]
 subreddits = ["wallstreetbets", "stocks", "investing", "options", "StockMarket"]

@@ -20,6 +20,7 @@ mode = "{mode}"
 db_path = "{tmp_path}/test.db"
 kill_switch_file = "{tmp_path}/KILL"
 universe_file = "{tmp_path}/universe.csv"
+blacklist_file = "{tmp_path}/blacklist.txt"
 
 [collect]
 subreddits = ["wallstreetbets"]

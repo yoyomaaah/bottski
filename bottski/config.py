@@ -57,6 +57,7 @@ class Settings(BaseModel):
     db_path: Path
     kill_switch_file: Path
     universe_file: Path
+    blacklist_file: Path
     collect: CollectConfig
     strategy: StrategyConfig
     risk: RiskLimits
@@ -135,6 +136,7 @@ def load_settings(
         db_path=Path(raw["db_path"]),
         kill_switch_file=Path(raw["kill_switch_file"]),
         universe_file=Path(raw["universe_file"]),
+        blacklist_file=Path(raw.get("blacklist_file", "data/blacklist.txt")),
         collect=CollectConfig(**raw["collect"]),
         strategy=StrategyConfig(**raw["strategy"]),
         risk=RiskLimits(**raw["risk"]),

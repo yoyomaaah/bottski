@@ -68,9 +68,11 @@ class Match:
 
 
 class Universe:
-    def __init__(self, symbols: set[str], aliases: dict[str, str]):
+    def __init__(self, symbols: set[str], aliases: dict[str, str],
+                 sectors: dict[str, str] | None = None):
         self.symbols = symbols
         self.aliases = aliases  # lowercase alias phrase -> symbol
+        self.sectors = sectors or {}  # symbol -> sector name
         self._alias_res = {
             alias: re.compile(r"(?<!\w)" + re.escape(alias) + r"(?!\w)")
             for alias in aliases
@@ -80,15 +82,18 @@ class Universe:
     def load(cls, path: str | Path) -> "Universe":
         symbols: set[str] = set()
         aliases: dict[str, str] = {}
+        sectors: dict[str, str] = {}
         with open(path, newline="") as f:
             for row in csv.DictReader(f):
                 sym = row["symbol"].strip().upper()
                 symbols.add(sym)
+                if row.get("sector"):
+                    sectors[sym] = row["sector"].strip().lower()
                 for alias in (row.get("aliases") or "").split(";"):
                     alias = alias.strip().lower()
                     if len(alias) >= 3:
                         aliases[alias] = sym
-        return cls(symbols, aliases)
+        return cls(symbols, aliases, sectors)
 
 
 def extract(text: str, universe: Universe, provider_symbols: list[str] | None = None) -> list[Match]:

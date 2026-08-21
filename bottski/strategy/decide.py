@@ -12,6 +12,8 @@ import logging
 import sqlite3
 
 from bottski.config import Settings
+from bottski.extract.tickers import Universe
+from bottski.risk.blacklist import Blacklist
 from bottski.risk.rails import AccountState, Candidate, check
 from bottski.store import db
 from bottski.strategy import core
@@ -34,6 +36,11 @@ def run(
         return {"error_no_panel": 1}
 
     kill = db.kill_switch_engaged(conn, settings.kill_switch_file)
+    blacklist = Blacklist.load(settings.blacklist_file)
+    try:
+        sectors = Universe.load(settings.universe_file).sectors
+    except FileNotFoundError:
+        sectors = {}
     proposals = core.propose(
         settings, rows, account.positions, position_age_days or {}, account.equity)
 
@@ -58,6 +65,7 @@ def run(
                 spread_bps=row.get("spread_bps"),
                 is_tradable=bool(row.get("is_tradable", True)),
                 is_halted=bool(row.get("is_halted", False)),
+                blacklisted=blacklist.matches(p.symbol, sectors.get(p.symbol)),
             )
             blocked_by = check(cand, account, settings.risk, orders_today, kill)
             if blocked_by is None:
