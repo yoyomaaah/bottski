@@ -141,3 +141,19 @@ def test_receipts_chatter_and_health(config_file, tmp_path):
     assert "Data-source health" in html
     assert "News (Alpaca/Benzinga)" in html
     assert "ApeWisdom (WSB mentions)" in html
+
+
+def test_ticker_links_and_tooltips(config_file, tmp_path):
+    s = load_settings(config_file("paper"), env=PAPER_ENV)
+    s.universe_file.write_text("symbol,name,aliases,sector\nBRK.B,Berkshire Hathaway,,finance\n")
+    conn = db.connect(s.db_path)
+    conn.execute(
+        "INSERT INTO positions_snapshot (snapshot_utc, symbol, qty, avg_entry_price,"
+        " market_value, unrealized_pl) VALUES (?, 'BRK.B', 5, 400, 2100, 100)",
+        (db.utcnow(),))
+    conn.commit()
+    out = tmp_path / "index.html"
+    report.build(s, conn, out_path=out)
+    html = out.read_text()
+    assert "https://finance.yahoo.com/quote/BRK-B" in html   # dot -> dash for yahoo
+    assert "title='Berkshire Hathaway · finance'" in html    # tooltip carries entity data

@@ -104,6 +104,10 @@ details[open] summary { margin-bottom: 0.5rem; }
 .explain { font-size: 0.83rem; color: var(--ink-2); }
 svg text { font-family: inherit; }
 .pill-kill { border-color: var(--critical); }
+a.sym { color: inherit; font-weight: 600; text-decoration: none;
+  border-bottom: 1px dotted var(--muted); }
+a.sym:hover { border-bottom-style: solid; }
+.explain a { color: inherit; }
 dl.gloss dt { font-weight: 600; margin-top: 0.6rem; }
 dl.gloss dd { margin: 0; color: var(--ink-2); font-size: 0.88rem; }
 """
@@ -140,6 +144,32 @@ SIGNAL_NAMES = {
     "ext_sentiment_score": "WSB sentiment (Tradestie)",
     "mention_velocity": "Mention spikes",
 }
+
+
+_UNI_META: dict[str, tuple[str, str]] = {}
+
+
+def _load_uni_meta(settings: Settings) -> None:
+    """symbol -> (company name, sector) for tooltips; best-effort."""
+    global _UNI_META
+    try:
+        from bottski.extract.tickers import Universe
+
+        u = Universe.load(settings.universe_file)
+        _UNI_META = {sym: (u.names.get(sym, ""), u.sectors.get(sym, ""))
+                     for sym in u.symbols}
+    except FileNotFoundError:
+        _UNI_META = {}
+
+
+def _sym(symbol: str) -> str:
+    """Ticker rendered as a link to its Yahoo Finance page, with a native
+    tooltip carrying company name + sector from universe.csv."""
+    name, sector = _UNI_META.get(symbol, ("", ""))
+    tip = " · ".join(x for x in (name, sector) if x) or symbol
+    y = symbol.replace(".", "-")
+    return (f"<a class=sym href='https://finance.yahoo.com/quote/{y}'"
+            f" target='_blank' rel='noopener' title='{tip}'>{symbol}</a>")
 
 
 def _fmt(x, pct=False, digits=3):
@@ -310,7 +340,7 @@ def _positions_html(st) -> str:
         pl = p["unrealized_pl"] or 0
         cls = "up" if pl >= 0 else "down"
         rows.append(
-            f"<tr><td><b>{p['symbol']}</b></td><td class=num>{p['qty']:g}</td>"
+            f"<tr><td>{_sym(p['symbol'])}</td><td class=num>{p['qty']:g}</td>"
             f"<td class=num>{_money(p['avg_entry_price'])}</td>"
             f"<td class=num>{_money(p['market_value'])}</td>"
             f"<td class='num {cls}'>{pl:+,.0f}</td></tr>")
@@ -482,7 +512,7 @@ def _decisions_html(st, settings: Settings, conn=None) -> str:
         else:
             act = "<span class='badge b-muted'>passed</span>"
         amount = _money(d["target_notional"]) if d["target_notional"] else "—"
-        rows.append(f"<tr><td><b>{d['symbol']}</b></td><td>{act}</td>"
+        rows.append(f"<tr><td>{_sym(d['symbol'])}</td><td>{act}</td>"
                     f"<td class=num>{amount}</td>"
                     f"<td class=explain>{why}{_evidence_html(d, settings, conn)}</td></tr>")
     body = (f"<table><tr><th>stock</th><th>action</th><th class=num>amount</th>"
@@ -500,7 +530,7 @@ def _fills_html(st) -> str:
     if not st["fills"]:
         return ""
     rows = "".join(
-        f"<tr><td>{_sthlm(f['filled_utc'])}</td><td><b>{f['symbol']}</b></td>"
+        f"<tr><td>{_sthlm(f['filled_utc'])}</td><td>{_sym(f['symbol'])}</td>"
         f"<td>{f['side']}</td><td class=num>{f['qty']:g}</td>"
         f"<td class=num>{_money(f['price'])}</td></tr>" for f in st["fills"])
     return (f"<details><summary>Recent executed orders ({len(st['fills'])})</summary>"
@@ -528,7 +558,7 @@ def _chatter_html(conn) -> str:
         else:
             note = "<span class=muted>agree</span>"
         trs.append(
-            f"<tr><td><b>{r['symbol']}</b></td><td class=num>{r['n_mentions']}</td>"
+            f"<tr><td>{_sym(r['symbol'])}</td><td class=num>{r['n_mentions']}</td>"
             f"<td class=num>{_fmt(ours, digits=2)}</td>"
             f"<td class=num>{_fmt(wsb, digits=2)}</td>"
             f"<td class=num>{r['ext_rank'] if r['ext_rank'] is not None else '—'}</td>"
@@ -682,6 +712,7 @@ def build(settings: Settings, conn: sqlite3.Connection,
     from bottski.store import db as _db
 
     st = _status(conn)
+    _load_uni_meta(settings)
     killed = _db.kill_switch_engaged(conn, settings.kill_switch_file)
     now = datetime.now(STHLM).strftime("%Y-%m-%d %H:%M")
     summary_lines = [f"docs={st['docs']} panel_days={st['panel_days']}"
