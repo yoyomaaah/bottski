@@ -14,7 +14,7 @@ def test_report_graceful_without_forward_returns(config_file, tmp_path):
     summary = report.build(s, conn, out_path=out)
     assert "waiting on forward returns" in summary
     html = out.read_text()
-    assert "bottski" in html and "No filled forward returns yet" in html
+    assert "bottski" in html and "Waiting for the first forward returns" in html
 
 
 def test_report_renders_metrics_when_returns_exist(config_file, tmp_path):
@@ -64,6 +64,6 @@ def test_report_trading_sections(config_file, tmp_path):
     report.build(s, conn, out_path=out)
     html = out.read_text()
     assert "Open positions" in html and "TSLA" in html
-    assert "min_dollar_volume" in html            # blocked counterfactual visible
+    assert "stock trades too thinly" in html      # blocked counterfactual, in plain language
     assert "<svg" in html                         # equity curve rendered
     assert "http-equiv='refresh'" in html
