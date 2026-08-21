@@ -15,6 +15,31 @@ import logging
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo
+
+STHLM = ZoneInfo("Europe/Stockholm")
+NY = ZoneInfo("America/New_York")
+
+
+def _sthlm(ts: str | None, with_date: bool = True) -> str:
+    """Render a stored UTC timestamp string in Stockholm local time."""
+    if not ts:
+        return "—"
+    try:
+        dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        local = dt.astimezone(STHLM)
+        return local.strftime("%Y-%m-%d %H:%M" if with_date else "%H:%M")
+    except ValueError:
+        return ts
+
+
+def _decision_time_local() -> str:
+    """What 15:45 New York is in Stockholm today (DST-safe)."""
+    today = datetime.now(NY).date()
+    ny = datetime(today.year, today.month, today.day, 15, 45, tzinfo=NY)
+    return ny.astimezone(STHLM).strftime("%H:%M")
 
 from bottski.config import Settings
 from bottski.research import ic
@@ -203,7 +228,7 @@ def _tiles(st, killed) -> str:
         today_val = f"{buys} buy · {sells} sell"
         today_note = f"{blocked} stopped by safety rails" if blocked else "no rail blocks"
     else:
-        today_val, today_note = "—", "decisions run 15:45 New York time"
+        today_val, today_note = "—", f"decisions run {_decision_time_local()} Stockholm time (15:45 New York)"
     system = ("<span class='badge b-crit'>⛔ halted</span>" if killed
               else "<span class='badge b-good'>✓ running</span>")
     return f"""
@@ -288,7 +313,7 @@ def _positions_html(st) -> str:
     return (f"<div class=card><table><tr><th>stock</th><th class=num>shares</th>"
             f"<th class=num>bought at</th><th class=num>worth now</th>"
             f"<th class=num>gain/loss</th></tr>{''.join(rows)}</table>"
-            f"<p class=explain>as of {st['positions_ts'][:16]} UTC · every position "
+            f"<p class=explain>as of {_sthlm(st['positions_ts'])} Stockholm time · every position "
             f"has an automatic stop-loss 8% below entry, held at the broker</p></div>")
 
 
@@ -435,11 +460,11 @@ def _fills_html(st) -> str:
     if not st["fills"]:
         return ""
     rows = "".join(
-        f"<tr><td>{f['filled_utc'][:16].replace('T', ' ')}</td><td><b>{f['symbol']}</b></td>"
+        f"<tr><td>{_sthlm(f['filled_utc'])}</td><td><b>{f['symbol']}</b></td>"
         f"<td>{f['side']}</td><td class=num>{f['qty']:g}</td>"
         f"<td class=num>{_money(f['price'])}</td></tr>" for f in st["fills"])
     return (f"<details><summary>Recent executed orders ({len(st['fills'])})</summary>"
-            f"<div class=card><table><tr><th>time (UTC)</th><th>stock</th><th>side</th>"
+            f"<div class=card><table><tr><th>time (Stockholm)</th><th>stock</th><th>side</th>"
             f"<th class=num>shares</th><th class=num>price</th></tr>{rows}</table></div></details>")
 
 
@@ -530,7 +555,7 @@ def build(settings: Settings, conn: sqlite3.Connection,
 
     st = _status(conn)
     killed = _db.kill_switch_engaged(conn, settings.kill_switch_file)
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")
+    now = datetime.now(STHLM).strftime("%Y-%m-%d %H:%M")
     summary_lines = [f"docs={st['docs']} panel_days={st['panel_days']}"
                      f" fwd_filled={st['fwd_filled']}"]
 
@@ -539,7 +564,7 @@ def build(settings: Settings, conn: sqlite3.Connection,
             f"<style>{CSS}</style><main>",
             "<h1>bottski <span class='badge b-muted'>PAPER — simulated money</span></h1>",
             f"<p class=sub>An experiment: does online chatter predict stock moves? "
-            f"· updated {now} UTC · refreshes itself every 5 min</p>"]
+            f"· updated {now} (Stockholm) · refreshes itself every 5 min</p>"]
     if killed:
         html.append("<div class='card pill-kill'><b>⛔ Kill switch engaged</b> "
                     "<span class=explain>— all trading stopped until manually resumed "
