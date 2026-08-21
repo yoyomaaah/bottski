@@ -148,9 +148,20 @@ def export_details(key: str) -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     with open("universe.csv", newline="") as f:
         symbols = [r["symbol"] for r in csv.DictReader(f)]
+    import urllib.error
+
     rows = []
     for i, sym in enumerate(symbols):
-        data = _get(f"{BASE}/v3/reference/tickers/{urllib.parse.quote(sym)}", {}, key)
+        try:
+            data = _get(f"{BASE}/v3/reference/tickers/{urllib.parse.quote(sym)}", {}, key)
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                rows.append({"ticker": sym, "name": None, "sic_code": None,
+                             "sic_description": None, "market_cap": None,
+                             "total_employees": None, "list_date": None,
+                             "description": "NOT_FOUND"})
+                continue
+            raise
         r = data.get("results") or {}
         rows.append({"ticker": sym, "name": r.get("name"),
                      "sic_code": r.get("sic_code"),
