@@ -49,6 +49,15 @@ def cmd_collect(settings: Settings, args: argparse.Namespace) -> int:
     except Exception:
         logger.exception("news collection failed")
         ok = False
+    from bottski.collect import external
+
+    for name, fn in (("apewisdom", external.collect_apewisdom),
+                     ("tradestie", external.collect_tradestie)):
+        try:
+            fn(settings, conn)
+        except Exception:
+            logger.exception("%s collection failed", name)
+            ok = False
     return 0 if ok else 1
 
 

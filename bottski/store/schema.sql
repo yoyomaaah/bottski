@@ -157,3 +157,23 @@ CREATE TABLE IF NOT EXISTS equity_curve (
     cash REAL NOT NULL,
     gross_exposure REAL NOT NULL
 );
+
+-- Snapshots from third-party Reddit-derived sentiment providers (ApeWisdom,
+-- Tradestie). Every fetch is its own row set: observe picks the latest fetch
+-- at or before its observation time, so rows are point-in-time honest.
+CREATE TABLE IF NOT EXISTS external_sentiment (
+    id INTEGER PRIMARY KEY,
+    provider TEXT NOT NULL,
+    fetched_utc TEXT NOT NULL,
+    symbol TEXT NOT NULL,
+    rank INTEGER,
+    mentions INTEGER,
+    upvotes INTEGER,
+    mentions_24h_ago INTEGER,
+    sentiment_label TEXT,            -- 'Bullish' | 'Bearish' (tradestie)
+    sentiment_score REAL,
+    raw_json TEXT NOT NULL,
+    UNIQUE (provider, fetched_utc, symbol)
+);
+CREATE INDEX IF NOT EXISTS idx_external_sentiment_lookup
+    ON external_sentiment (provider, symbol, fetched_utc);
