@@ -11,7 +11,7 @@ APP_DIR=$HOME_DIR/bottski
 echo "== packages =="
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -q
-apt-get install -yq git curl sqlite3 rclone unattended-upgrades
+apt-get install -yq git curl sqlite3 unattended-upgrades
 timedatectl set-timezone UTC
 
 echo "== user =="
