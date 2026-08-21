@@ -62,3 +62,18 @@ def test_universe_sectors_loaded():
     assert u.sectors["PM"] == "tobacco"
     assert u.sectors["LMT"] == "defense"
     assert u.sectors["TSLA"] == "auto"
+
+
+def test_dashboard_shows_blacklist_card(config_file, tmp_path):
+    from bottski.research import report
+    s = load_settings(config_file("paper"), env=PAPER_ENV)
+    s.universe_file.write_text("symbol,name,aliases,sector\nPLTR,Palantir,,tech\n")
+    object.__setattr__(s, "blacklist_file", tmp_path / "bl.txt")
+    s.blacklist_file.write_text("sector:energy\nPLTR\n")
+    conn = db.connect(s.db_path)
+    out = tmp_path / "index.html"
+    report.build(s, conn, out_path=out)
+    html = out.read_text()
+    assert "Excluded from trading" in html
+    assert "sector: energy" in html
+    assert "PLTR" in html

@@ -359,6 +359,25 @@ def _blacklist_desc(settings: Settings) -> str:
     return Blacklist.load(settings.blacklist_file).describe()
 
 
+def _blacklist_html(settings: Settings) -> str:
+    from bottski.risk.blacklist import Blacklist
+
+    bl = Blacklist.load(settings.blacklist_file)
+    if not bl.sectors and not bl.symbols:
+        return ""
+    chips = []
+    for sec in sorted(bl.sectors):
+        chips.append(f"<span class='badge b-crit'>sector: {sec}</span>")
+    for sym in sorted(bl.symbols):
+        chips.append(f"<span class='badge b-crit'>{_sym(sym)}</span>")
+    return (f"<h2>Excluded from trading</h2>"
+            f"<p class=lede>Names and sectors the bot will never buy, by your choice. "
+            f"They still appear in the research data — excluded from the portfolio, "
+            f"not the experiment. Blocked buys show up in the decisions log above.</p>"
+            f"<div class=card style='display:flex;flex-wrap:wrap;gap:6px'>"
+            f"{''.join(chips)}</div>")
+
+
 def _rules_html(settings: Settings) -> str:
     c, r = settings.strategy, settings.risk
     return f"""
@@ -748,6 +767,8 @@ def build(settings: Settings, conn: sqlite3.Connection,
 
     html.append(f"<h2>What the bot owns</h2>")
     html.append(_positions_html(st))
+
+    html.append(_blacklist_html(settings))
 
     day = st["decision_day"] or "today"
     html.append(f"<h2>Decisions — {day}</h2>")
