@@ -1,0 +1,14 @@
+# T1 dashboard: serves data/www (report page only — NEVER the data/ root, the
+# db lives there) over HTTPS with basic auth. Deployed to /etc/caddy/Caddyfile
+# with the password hash substituted (caddy hash-password).
+https://<droplet-ip>, https://localhost {
+    tls internal
+    root * /home/bottski/bottski/data/www
+    file_server
+    basic_auth {
+        jochen {$DASH_HASH}
+    }
+}
+http:// {
+    redir https://<droplet-ip>{uri} permanent
+}

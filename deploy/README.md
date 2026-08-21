@@ -48,3 +48,9 @@ systemctl list-timers 'bottski-*'              # next scheduled run
 ```
 ssh root@<droplet-ip> 'curl -fsSL https://raw.githubusercontent.com/yoyomaaah/bottski/main/deploy/provision.sh | bash'
 ```
+
+## Dashboard (T1)
+Caddy serves `data/www/index.html` (regenerated every 15 min by the report
+timer) at `https://<droplet-ip>/` — self-signed cert (accept the browser
+warning once), basic auth. Template: `deploy/caddy/Caddyfile.template`;
+rotate the password with `caddy hash-password` + edit /etc/caddy/Caddyfile.
