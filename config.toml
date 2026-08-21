@@ -1,0 +1,26 @@
+# bottski configuration. No secrets in this file — secrets live in .env only.
+
+mode = "paper"          # "paper" | "live". Live additionally requires BOTTSKI_LIVE_CONFIRM env.
+db_path = "data/bottski.db"
+kill_switch_file = "data/KILL"
+universe_file = "universe.csv"
+
+[collect]
+subreddits = ["wallstreetbets", "stocks", "investing", "options", "StockMarket"]
+posts_per_subreddit = 50
+comments_per_post = 200
+
+[strategy]
+version = "v0"
+# Sentiment accumulation window: previous 16:00 ET -> today 15:40 ET (set in code, not here).
+
+[risk]
+max_position_pct = 5.0          # of equity, per position
+max_gross_exposure_pct = 50.0   # of equity, sum of all positions
+max_open_positions = 10
+max_order_notional = 2000.0     # USD per order
+max_orders_per_day = 10
+max_daily_loss_pct = 3.0        # trips kill switch
+min_dollar_volume_20d = 5000000 # USD; don't touch illiquid names
+max_spread_bps = 50
+stop_loss_pct = 8.0             # bracket stop distance on every entry
