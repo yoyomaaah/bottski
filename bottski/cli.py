@@ -17,7 +17,6 @@ NOT_IMPLEMENTED = {
     "decide": "M5",
     "execute": "M6",
     "reconcile": "M6",
-    "report": "M4",
 }
 
 
@@ -83,6 +82,15 @@ def cmd_observe(settings: Settings, args: argparse.Namespace) -> int:
     )
     stats = panel.build(settings, conn, obs_date)
     print(stats)
+    return 0
+
+
+def cmd_report(settings: Settings, args: argparse.Namespace) -> int:
+    from bottski.research import report
+
+    conn = db.connect(settings.db_path)
+    summary = report.build(settings, conn)
+    print(summary)
     return 0
 
 
@@ -154,6 +162,7 @@ def main(argv: list[str] | None = None) -> int:
     p_obs = sub.add_parser("observe", help="build the observation panel for a trading day")
     p_obs.add_argument("--date", help="ET trading date (default: today)")
     sub.add_parser("backfill-returns", help="fill forward returns on past panel rows")
+    sub.add_parser("report", help="write data/report.html with data status + signal metrics")
     sub.add_parser("status", help="mode, kill switch, db counts")
     sub.add_parser("halt", help="engage kill switch")
     sub.add_parser("resume", help="release kill switch")
@@ -170,6 +179,7 @@ def main(argv: list[str] | None = None) -> int:
         "extract": cmd_extract,
         "observe": cmd_observe,
         "backfill-returns": cmd_backfill_returns,
+        "report": cmd_report,
         "status": cmd_status,
         "halt": cmd_halt,
         "resume": cmd_resume,

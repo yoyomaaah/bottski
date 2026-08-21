@@ -31,7 +31,7 @@ sudo -u bottski bash -c "cd $APP_DIR && $HOME_DIR/.local/bin/uv sync"
 echo "== systemd =="
 cp "$APP_DIR"/deploy/systemd/*.service "$APP_DIR"/deploy/systemd/*.timer /etc/systemd/system/
 systemctl daemon-reload
-systemctl enable --now bottski-collect.timer bottski-observe.timer bottski-backfill.timer
+systemctl enable --now bottski-collect.timer bottski-observe.timer bottski-backfill.timer bottski-report.timer
 
 echo "== status =="
 if [ -f "$APP_DIR/.env" ]; then
