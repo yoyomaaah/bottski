@@ -1,8 +1,8 @@
 [Unit]
-Description=Run bottski report at 17:30 ET on weekdays
+Description=Run bottski report every 15 min on weekdays (dashboard refresh)
 
 [Timer]
-OnCalendar=Mon..Fri 17:30:00 America/New_York
+OnCalendar=Mon..Fri *-*-* *:02/15:00 America/New_York
 Persistent=true
 
 [Install]
