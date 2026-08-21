@@ -1,0 +1,10 @@
+[Unit]
+Description=Run bottski collect every 20 minutes
+
+[Timer]
+OnCalendar=*-*-* *:00/20:00
+RandomizedDelaySec=60
+Persistent=true
+
+[Install]
+WantedBy=timers.target

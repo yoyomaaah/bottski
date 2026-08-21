@@ -1,0 +1,12 @@
+[Unit]
+Description=bottski collect (news + external sentiment + reddit when approved)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=bottski
+WorkingDirectory=/home/bottski/bottski
+ExecStart=/home/bottski/bottski/deploy/run-job.sh collect
+TimeoutStartSec=600
+Nice=10
