@@ -14,10 +14,8 @@ from bottski.store import db
 logger = logging.getLogger("bottski")
 
 NOT_IMPLEMENTED = {
-    "observe": "M3",
     "decide": "M5",
     "execute": "M6",
-    "backfill-returns": "M3",
     "reconcile": "M6",
     "report": "M4",
 }
@@ -62,10 +60,39 @@ def cmd_collect(settings: Settings, args: argparse.Namespace) -> int:
         from bottski.extract import tickers as extract_tickers
 
         extract_tickers.run(settings, conn)
+        from bottski.score import vader as scorer
+
+        scorer.run(settings, conn)
     except Exception:
-        logger.exception("ticker extraction failed")
+        logger.exception("extraction/scoring failed")
         ok = False
     return 0 if ok else 1
+
+
+def cmd_observe(settings: Settings, args: argparse.Namespace) -> int:
+    from datetime import date
+    from zoneinfo import ZoneInfo
+
+    from bottski.features import panel
+
+    conn = db.connect(settings.db_path)
+    obs_date = (
+        date.fromisoformat(args.date)
+        if args.date
+        else datetime.now(ZoneInfo("America/New_York")).date()
+    )
+    stats = panel.build(settings, conn, obs_date)
+    print(stats)
+    return 0
+
+
+def cmd_backfill_returns(settings: Settings, args: argparse.Namespace) -> int:
+    from bottski.features import returns
+
+    conn = db.connect(settings.db_path)
+    stats = returns.run(settings, conn)
+    print(stats)
+    return 0
 
 
 def cmd_extract(settings: Settings, args: argparse.Namespace) -> int:
@@ -124,6 +151,9 @@ def main(argv: list[str] | None = None) -> int:
 
     sub.add_parser("collect", help="pull news + external sentiment, then extract tickers")
     sub.add_parser("extract", help="run ticker extraction on unprocessed documents")
+    p_obs = sub.add_parser("observe", help="build the observation panel for a trading day")
+    p_obs.add_argument("--date", help="ET trading date (default: today)")
+    sub.add_parser("backfill-returns", help="fill forward returns on past panel rows")
     sub.add_parser("status", help="mode, kill switch, db counts")
     sub.add_parser("halt", help="engage kill switch")
     sub.add_parser("resume", help="release kill switch")
@@ -138,6 +168,8 @@ def main(argv: list[str] | None = None) -> int:
     handlers = {
         "collect": cmd_collect,
         "extract": cmd_extract,
+        "observe": cmd_observe,
+        "backfill-returns": cmd_backfill_returns,
         "status": cmd_status,
         "halt": cmd_halt,
         "resume": cmd_resume,

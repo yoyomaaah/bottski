@@ -1,0 +1,11 @@
+[Unit]
+Description=bottski observe (daily panel build, 15:40 ET)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=bottski
+WorkingDirectory=/home/bottski/bottski
+ExecStart=/home/bottski/bottski/deploy/run-job.sh observe
+TimeoutStartSec=900

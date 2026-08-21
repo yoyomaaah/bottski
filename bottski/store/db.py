@@ -7,7 +7,15 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 SCHEMA_PATH = Path(__file__).parent / "schema.sql"
-SCHEMA_VERSION = "1"
+SCHEMA_VERSION = "2"
+
+# Columns added after a table already shipped; CREATE IF NOT EXISTS won't add
+# them to existing databases, so connect() applies these idempotently.
+_COLUMN_MIGRATIONS = [
+    ("observations", "ext_mentions", "INTEGER"),
+    ("observations", "ext_rank", "INTEGER"),
+    ("observations", "ext_sentiment_score", "REAL"),
+]
 
 
 def utcnow() -> str:
@@ -21,6 +29,10 @@ def connect(db_path: str | Path) -> sqlite3.Connection:
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA foreign_keys=ON")
     conn.executescript(SCHEMA_PATH.read_text())
+    for table, col, typ in _COLUMN_MIGRATIONS:
+        cols = {r[1] for r in conn.execute(f"PRAGMA table_info({table})")}
+        if col not in cols:
+            conn.execute(f"ALTER TABLE {table} ADD COLUMN {col} {typ}")
     conn.execute(
         "INSERT OR IGNORE INTO meta (key, value) VALUES ('schema_version', ?)",
         (SCHEMA_VERSION,),

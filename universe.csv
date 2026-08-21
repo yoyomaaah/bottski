@@ -61,7 +61,7 @@ PANW,Palo Alto Networks,palo alto networks
 ZS,Zscaler,zscaler
 MDB,MongoDB,mongodb
 SHOP,Shopify,shopify
-SQ,Block,
+XYZ,Block,block inc
 PYPL,PayPal,paypal
 COIN,Coinbase,coinbase
 HOOD,Robinhood,robinhood
@@ -194,13 +194,11 @@ ACHR,Archer Aviation,archer aviation
 AI,C3.ai,c3.ai
 BBBY,Bed Bath & Beyond,bed bath
 DJT,Trump Media,trump media;truth social
-DWAC,Digital World Acquisition,
 PHUN,Phunware,phunware
 MARA,MARA Holdings,marathon digital
 RIOT,Riot Platforms,riot blockchain
 CLSK,CleanSpark,cleanspark
 HUT,Hut 8,hut 8
-BITF,Bitfarms,bitfarms
 TLRY,Tilray,tilray
 CGC,Canopy Growth,canopy growth
 ACB,Aurora Cannabis,aurora cannabis
@@ -209,7 +207,6 @@ CRSP,CRISPR Therapeutics,crispr
 NTLA,Intellia Therapeutics,intellia
 EDIT,Editas Medicine,editas
 BEAM,Beam Therapeutics,beam therapeutics
-SAVA,Cassava Sciences,cassava
 NVAX,Novavax,novavax
 INTU,Intuit,intuit
 AMAT,Applied Materials,applied materials

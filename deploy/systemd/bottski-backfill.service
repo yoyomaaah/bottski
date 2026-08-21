@@ -1,0 +1,11 @@
+[Unit]
+Description=bottski backfill-returns (17:00 ET)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=bottski
+WorkingDirectory=/home/bottski/bottski
+ExecStart=/home/bottski/bottski/deploy/run-job.sh backfill-returns
+TimeoutStartSec=900

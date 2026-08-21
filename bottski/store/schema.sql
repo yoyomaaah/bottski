@@ -89,6 +89,10 @@ CREATE TABLE IF NOT EXISTS observations (
     scorer_version TEXT,
     universe_version TEXT,
 
+    ext_mentions INTEGER,
+    ext_rank INTEGER,
+    ext_sentiment_score REAL,
+
     fwd_ret_1d REAL,
     fwd_ret_3d REAL,
     fwd_ret_5d REAL,
