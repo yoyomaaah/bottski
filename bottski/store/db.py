@@ -46,3 +46,42 @@ def set_control(conn: sqlite3.Connection, key: str, value: str) -> None:
 def kill_switch_engaged(conn: sqlite3.Connection, kill_file: Path) -> bool:
     """Halted if EITHER the DB flag or the file exists. Checked before every order."""
     return get_control(conn, "kill_switch", "0") == "1" or kill_file.exists()
+
+
+def upsert_document(
+    conn: sqlite3.Connection,
+    *,
+    source: str,
+    source_id: str,
+    subreddit_or_publisher: str | None,
+    author_hash: str | None,
+    created_utc: str,
+    title: str | None,
+    body: str | None,
+    score_at_fetch: int | None,
+    num_comments_at_fetch: int | None,
+    url: str | None,
+    raw_json: str,
+) -> bool:
+    """Insert a document, or refresh only its point-in-time counters if it
+    already exists. Title/body/created are immutable after first sight.
+    Returns True if the row was newly inserted."""
+    existing = conn.execute(
+        "SELECT id FROM raw_documents WHERE source = ? AND source_id = ?",
+        (source, source_id),
+    ).fetchone()
+    if existing:
+        conn.execute(
+            "UPDATE raw_documents SET score_at_fetch = ?, num_comments_at_fetch = ?, "
+            "fetched_utc = ? WHERE id = ?",
+            (score_at_fetch, num_comments_at_fetch, utcnow(), existing["id"]),
+        )
+        return False
+    conn.execute(
+        "INSERT INTO raw_documents (source, source_id, subreddit_or_publisher, "
+        "author_hash, created_utc, fetched_utc, title, body, score_at_fetch, "
+        "num_comments_at_fetch, url, raw_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+        (source, source_id, subreddit_or_publisher, author_hash, created_utc,
+         utcnow(), title, body, score_at_fetch, num_comments_at_fetch, url, raw_json),
+    )
+    return True

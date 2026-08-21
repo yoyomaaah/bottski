@@ -14,7 +14,6 @@ from bottski.store import db
 logger = logging.getLogger("bottski")
 
 NOT_IMPLEMENTED = {
-    "collect": "M1",
     "observe": "M3",
     "decide": "M5",
     "execute": "M6",
@@ -22,6 +21,32 @@ NOT_IMPLEMENTED = {
     "reconcile": "M6",
     "report": "M4",
 }
+
+
+def cmd_collect(settings: Settings, args: argparse.Namespace) -> int:
+    """Pull Reddit + news into raw_documents. Each source is its own crash
+    domain: one failing must not stop the other. Non-zero exit if any failed,
+    so the scheduler's healthcheck ping is withheld."""
+    conn = db.connect(settings.db_path)
+    ok = True
+    try:
+        from bottski.collect import reddit as reddit_collector
+
+        stats = reddit_collector.collect(settings, conn)
+        logger.info("reddit done: %s", stats)
+        ok = ok and stats.get("errors", 0) == 0
+    except Exception:
+        logger.exception("reddit collection failed")
+        ok = False
+    try:
+        from bottski.collect import news as news_collector
+
+        stats = news_collector.collect(settings, conn)
+        logger.info("news done: %s", stats)
+    except Exception:
+        logger.exception("news collection failed")
+        ok = False
+    return 0 if ok else 1
 
 
 def cmd_status(settings: Settings, args: argparse.Namespace) -> int:
@@ -69,6 +94,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--config", default="config.toml")
     sub = parser.add_subparsers(dest="command", required=True)
 
+    sub.add_parser("collect", help="pull Reddit + news into raw_documents")
     sub.add_parser("status", help="mode, kill switch, db counts")
     sub.add_parser("halt", help="engage kill switch")
     sub.add_parser("resume", help="release kill switch")
@@ -80,7 +106,12 @@ def main(argv: list[str] | None = None) -> int:
     botlog.setup(settings.secret_values())
     logger.info("bottski starting — mode=%s base_url=%s", settings.mode.upper(), settings.base_url)
 
-    handlers = {"status": cmd_status, "halt": cmd_halt, "resume": cmd_resume}
+    handlers = {
+        "collect": cmd_collect,
+        "status": cmd_status,
+        "halt": cmd_halt,
+        "resume": cmd_resume,
+    }
     return handlers.get(args.command, cmd_stub)(settings, args)
 
 
