@@ -31,6 +31,10 @@ SIGNALS = {
     # NaN != NaN — pandas-query idiom for "not null"
     "ext_sentiment_score": "ext_sentiment_score == ext_sentiment_score",
     "mention_velocity": "mention_velocity == mention_velocity",
+    # attention LEVEL among mentioned names — pre-registered expectation
+    # (2026-08-21, before any forward returns existed): NEGATIVE, i.e. the
+    # retail-attention fade. Evaluated to test that expectation forward.
+    "n_mentions": "n_mentions >= 1",
 }
 CONTROLS = ["ret_1d", "ret_5d", "log_dollar_volume"]
 

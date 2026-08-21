@@ -33,7 +33,9 @@ from bottski.market_calendar import _nyse  # noqa: E402
 OUT = Path("data/massive")
 BASE = "https://api.polygon.io"
 PACE_S = 0.13
-BARS_START = date(2015, 1, 1)
+# Developer plan exposes a rolling ~10y window (probed: 2016-09-22 OK,
+# 2016-08-22 NOT_AUTHORIZED on 2026-08-21). Start inside it with margin.
+BARS_START = date(2016, 10, 1)
 
 
 def _key() -> str:

@@ -143,6 +143,7 @@ SIGNAL_NAMES = {
     "news_score_mean": "News-only sentiment",
     "ext_sentiment_score": "WSB sentiment (Tradestie)",
     "mention_velocity": "Mention spikes",
+    "n_mentions": "Attention level (mention count)",
 }
 
 
