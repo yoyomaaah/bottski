@@ -58,7 +58,23 @@ def cmd_collect(settings: Settings, args: argparse.Namespace) -> int:
         except Exception:
             logger.exception("%s collection failed", name)
             ok = False
+    try:
+        from bottski.extract import tickers as extract_tickers
+
+        extract_tickers.run(settings, conn)
+    except Exception:
+        logger.exception("ticker extraction failed")
+        ok = False
     return 0 if ok else 1
+
+
+def cmd_extract(settings: Settings, args: argparse.Namespace) -> int:
+    from bottski.extract import tickers as extract_tickers
+
+    conn = db.connect(settings.db_path)
+    stats = extract_tickers.run(settings, conn)
+    print(stats)
+    return 0
 
 
 def cmd_status(settings: Settings, args: argparse.Namespace) -> int:
@@ -106,7 +122,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--config", default="config.toml")
     sub = parser.add_subparsers(dest="command", required=True)
 
-    sub.add_parser("collect", help="pull Reddit + news into raw_documents")
+    sub.add_parser("collect", help="pull news + external sentiment, then extract tickers")
+    sub.add_parser("extract", help="run ticker extraction on unprocessed documents")
     sub.add_parser("status", help="mode, kill switch, db counts")
     sub.add_parser("halt", help="engage kill switch")
     sub.add_parser("resume", help="release kill switch")
@@ -120,6 +137,7 @@ def main(argv: list[str] | None = None) -> int:
 
     handlers = {
         "collect": cmd_collect,
+        "extract": cmd_extract,
         "status": cmd_status,
         "halt": cmd_halt,
         "resume": cmd_resume,
