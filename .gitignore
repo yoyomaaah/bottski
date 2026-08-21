@@ -9,3 +9,4 @@ data/
 .pytest_cache/
 dist/
 .DS_Store
+deploy/hosts.local
