@@ -211,7 +211,7 @@ def _verdict(r: "ic.HorizonResult") -> tuple[str, str]:
 def _status(conn) -> dict:
     q = lambda sql, *a: conn.execute(sql, a).fetchone()
     docs = q("SELECT COUNT(*) c FROM raw_documents")["c"]
-    eq = q("SELECT equity FROM equity_curve ORDER BY snapshot_utc DESC LIMIT 1")
+    eq = q("SELECT equity, snapshot_utc FROM equity_curve ORDER BY snapshot_utc DESC LIMIT 1")
     eq0 = q("SELECT equity FROM equity_curve ORDER BY snapshot_utc LIMIT 1")
     pos_ts = q("SELECT MAX(snapshot_utc) m FROM positions_snapshot")["m"]
     positions = conn.execute(
@@ -229,6 +229,7 @@ def _status(conn) -> dict:
         "panel_days": q("SELECT COUNT(DISTINCT obs_date) c FROM observations")["c"],
         "fwd_filled": q("SELECT COUNT(*) c FROM observations WHERE fwd_ret_1d IS NOT NULL")["c"],
         "equity": eq["equity"] if eq else None,
+        "equity_ts": eq["snapshot_utc"] if eq else None,
         "equity_start": eq0["equity"] if eq0 else None,
         "positions": positions,
         "positions_ts": pos_ts,
@@ -245,8 +246,10 @@ def _tiles(st, killed) -> str:
     eq, eq0 = st["equity"], st["equity_start"]
     if eq is not None and eq0:
         d = eq / eq0 - 1
-        cls = "up" if d >= 0 else "down"
-        delta = f"<div class='delta {cls}'>{d*100:+.2f}% since start</div>"
+        cls = "up" if (eq - eq0) >= 0 else "down"
+        delta = (f"<div class='delta {cls}'>{eq - eq0:+,.2f} ({d*100:+.2f}%) since start</div>"
+                 f"<div class=note>broker snapshot {_sthlm(st.get('equity_ts'))} — "
+                 f"synced after each trading day</div>")
         eq_html = f"<div class=value>{_money(eq)}</div>{delta}"
     else:
         eq_html = "<div class=value>$100,000</div><div class=note>starting value — first snapshot lands after the first trading close</div>"
