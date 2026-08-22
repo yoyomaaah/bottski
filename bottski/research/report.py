@@ -276,9 +276,16 @@ def _tiles(st, killed) -> str:
     buys = sum(1 for d in acted if d["action"] == "buy")
     sells = sum(1 for d in acted if d["action"] == "sell")
     blocked = sum(1 for d in st["decisions"] if d["blocked_by"])
+    today_ny = datetime.now(NY).date().isoformat()
+    is_today = st.get("decision_day") == today_ny
+    trades_label = "Today's trades" if is_today else (
+        f"Trades — {st['decision_day']} (last trading day)" if st.get("decision_day")
+        else "Trades")
     if st["decisions"]:
         today_val = f"{buys} buy · {sells} sell"
         today_note = f"{blocked} stopped by safety rails" if blocked else "no rail blocks"
+        if not is_today:
+            today_note += " · markets closed since"
     else:
         today_val, today_note = "—", f"decisions run {_decision_time_local()} Stockholm time (15:45 New York)"
     system = ("<span class='badge b-crit'>⛔ halted</span>" if killed
@@ -288,7 +295,7 @@ def _tiles(st, killed) -> str:
   <div class=tile><div class=label>Account value (paper money)</div>{eq_html}</div>
   <div class=tile><div class=label>Open positions</div>
     <div class=value>{n_pos}</div>{pos_delta or "<div class=note>currently flat</div>"}</div>
-  <div class=tile><div class=label>Today's trades</div>
+  <div class=tile><div class=label>{trades_label}</div>
     <div class=value>{today_val}</div><div class=note>{today_note}</div></div>
   <div class=tile><div class=label>System</div>
     <div class=value>{system}</div>

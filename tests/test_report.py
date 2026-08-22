@@ -174,3 +174,24 @@ def test_positions_table_units_are_consistent(config_file, tmp_path):
     assert "$471.09" in html          # per-share entry
     assert "$472.00" in html          # per-share now (1888/4)
     assert "+3.64 (+0.19%)" in html   # exact P&L with percent
+
+
+def test_trades_tile_labels_stale_decision_day(config_file, tmp_path):
+    s = load_settings(config_file("paper"), env=PAPER_ENV)
+    conn = db.connect(s.db_path)
+    conn.execute(
+        "INSERT INTO decisions (decision_utc, symbol, action, reason_code,"
+        " inputs_json, strategy_version, mode) VALUES"
+        " ('2026-08-21T19:45:00+00:00', 'AMD', 'buy', 'sentiment_entry',"
+        " '{\"panel\": {}}', 'v0', 'paper')")
+    conn.commit()
+    out = tmp_path / "index.html"
+    report.build(s, conn, out_path=out)
+    html = out.read_text()
+    # rendered on a later date, the tile must carry the decision date, not "Today"
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+    if datetime.now(ZoneInfo("America/New_York")).date().isoformat() != "2026-08-21":
+        assert "Trades — 2026-08-21 (last trading day)" in html
+        assert "markets closed since" in html
+        assert "Today's trades" not in html
