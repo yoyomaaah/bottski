@@ -157,3 +157,20 @@ def test_ticker_links_and_tooltips(config_file, tmp_path):
     html = out.read_text()
     assert "https://finance.yahoo.com/quote/BRK-B" in html   # dot -> dash for yahoo
     assert "title='Berkshire Hathaway · finance'" in html    # tooltip carries entity data
+
+
+def test_positions_table_units_are_consistent(config_file, tmp_path):
+    s = load_settings(config_file("paper"), env=PAPER_ENV)
+    conn = db.connect(s.db_path)
+    conn.execute(
+        "INSERT INTO positions_snapshot (snapshot_utc, symbol, qty, avg_entry_price,"
+        " market_value, unrealized_pl) VALUES (?, 'AMD', 4, 471.09, 1888.0, 3.64)",
+        (db.utcnow(),))
+    conn.commit()
+    out = tmp_path / "index.html"
+    report.build(s, conn, out_path=out)
+    html = out.read_text()
+    assert "paid / share" in html and "now / share" in html and "total value" in html
+    assert "$471.09" in html          # per-share entry
+    assert "$472.00" in html          # per-share now (1888/4)
+    assert "+3.64 (+0.19%)" in html   # exact P&L with percent

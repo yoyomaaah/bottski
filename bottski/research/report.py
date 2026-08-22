@@ -341,13 +341,19 @@ def _positions_html(st) -> str:
     for p in st["positions"]:
         pl = p["unrealized_pl"] or 0
         cls = "up" if pl >= 0 else "down"
+        qty = p["qty"] or 0
+        now_per_share = (p["market_value"] / qty) if qty else None
+        cost = (p["avg_entry_price"] or 0) * qty
+        pct = f" ({pl / cost * 100:+.2f}%)" if cost else ""
         rows.append(
-            f"<tr><td>{_sym(p['symbol'])}</td><td class=num>{p['qty']:g}</td>"
-            f"<td class=num>{_money(p['avg_entry_price'])}</td>"
+            f"<tr><td>{_sym(p['symbol'])}</td><td class=num>{qty:g}</td>"
+            f"<td class=num>${p['avg_entry_price']:,.2f}</td>"
+            f"<td class=num>{'$' + format(now_per_share, ',.2f') if now_per_share else '—'}</td>"
             f"<td class=num>{_money(p['market_value'])}</td>"
-            f"<td class='num {cls}'>{pl:+,.0f}</td></tr>")
+            f"<td class='num {cls}'>{pl:+,.2f}{pct}</td></tr>")
     return (f"<div class=card><table><tr><th>stock</th><th class=num>shares</th>"
-            f"<th class=num>bought at</th><th class=num>worth now</th>"
+            f"<th class=num>paid / share</th><th class=num>now / share</th>"
+            f"<th class=num>total value</th>"
             f"<th class=num>gain/loss</th></tr>{''.join(rows)}</table>"
             f"<p class=explain>as of {_sthlm(st['positions_ts'])} Stockholm time · every position "
             f"has an automatic stop-loss 8% below entry, held at the broker</p></div>")
