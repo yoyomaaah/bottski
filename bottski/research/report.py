@@ -110,6 +110,18 @@ a.sym:hover { border-bottom-style: solid; }
 .explain a { color: inherit; }
 dl.gloss dt { font-weight: 600; margin-top: 0.6rem; }
 dl.gloss dd { margin: 0; color: var(--ink-2); font-size: 0.88rem; }
+.card { overflow-x: auto; }           /* wide tables scroll inside their card */
+th, td { white-space: nowrap; }
+td.explain, td:has(details) { white-space: normal; min-width: 220px; }
+@media (max-width: 640px) {
+  main { padding: 0.8rem 0.6rem 2.5rem; }
+  h1 { font-size: 1.25rem; }
+  h1 .badge { display: block; width: fit-content; margin-top: 4px; }
+  .tiles { grid-template-columns: 1fr 1fr; }
+  .tile .value { font-size: 1.25rem; }
+  table { font-size: 0.8rem; }
+  th, td { padding: 4px 6px; }
+}
 """
 
 # --- plain-language mappings -------------------------------------------------
@@ -248,8 +260,9 @@ def _tiles(st, killed) -> str:
         d = eq / eq0 - 1
         cls = "up" if (eq - eq0) >= 0 else "down"
         delta = (f"<div class='delta {cls}'>{eq - eq0:+,.2f} ({d*100:+.2f}%) since start</div>"
-                 f"<div class=note>broker snapshot {_sthlm(st.get('equity_ts'))} — "
-                 f"synced after each trading day</div>")
+                 f"<div class=note>account value as reported by the broker at "
+                 f"{_sthlm(st.get('equity_ts'))} · auto-refreshes each US trading "
+                 f"day ~22:05 Stockholm time</div>")
         eq_html = f"<div class=value>{_money(eq)}</div>{delta}"
     else:
         eq_html = "<div class=value>$100,000</div><div class=note>starting value — first snapshot lands after the first trading close</div>"

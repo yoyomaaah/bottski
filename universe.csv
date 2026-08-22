@@ -8,8 +8,8 @@ VOO,Vanguard S&P 500 ETF,,etf
 TLT,iShares 20+ Year Treasury ETF,,etf
 GLD,SPDR Gold Shares,,etf
 SLV,iShares Silver Trust,,etf
-USO,United States Oil Fund,,energy
-XLE,Energy Select SPDR,,energy
+USO,United States Oil Fund,,fossil-energy
+XLE,Energy Select SPDR,,fossil-energy
 XLF,Financial Select SPDR,,etf
 XLK,Technology Select SPDR,,etf
 SQQQ,ProShares UltraPro Short QQQ,,etf
@@ -115,11 +115,11 @@ KHC,Kraft Heinz,kraft heinz,food-bev
 MDLZ,Mondelez,mondelez,food-bev
 PM,Philip Morris,philip morris,tobacco
 MO,Altria,altria,tobacco
-XOM,Exxon Mobil,exxon,energy
-CVX,Chevron,chevron,energy
-COP,ConocoPhillips,conocophillips,energy
-OXY,Occidental Petroleum,occidental,energy
-SLB,Schlumberger,schlumberger,energy
+XOM,Exxon Mobil,exxon,fossil-energy
+CVX,Chevron,chevron,fossil-energy
+COP,ConocoPhillips,conocophillips,fossil-energy
+OXY,Occidental Petroleum,occidental,fossil-energy
+SLB,Schlumberger,schlumberger,fossil-energy
 BA,Boeing,boeing,aerospace
 LMT,Lockheed Martin,lockheed,defense
 RTX,RTX Corp,raytheon,defense

@@ -58,7 +58,7 @@ def test_decide_records_blacklist_counterfactual(config_file, tmp_path):
 def test_universe_sectors_loaded():
     from bottski.extract.tickers import Universe
     u = Universe.load("universe.csv")
-    assert u.sectors["XOM"] == "energy"
+    assert u.sectors["XOM"] == "fossil-energy"  # renamed: label must say fossil, not all energy
     assert u.sectors["PM"] == "tobacco"
     assert u.sectors["LMT"] == "defense"
     assert u.sectors["TSLA"] == "auto"

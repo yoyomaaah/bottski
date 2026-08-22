@@ -2,10 +2,10 @@
 # (Blacklisted names stay in the research panel; existing positions exit by
 #  normal rules. Sells are never blocked.)
 # One entry per line:
-#   sector:<name>   excludes a whole sector from universe.csv (e.g. sector:energy)
+#   sector:<name>   excludes a whole sector from universe.csv (e.g. sector:fossil-energy)
 #   <SYMBOL>        excludes one ticker (e.g. GME)
 # Lines starting with # are ignored. Live file: data/blacklist.txt
-sector:energy
+sector:fossil-energy
 sector:tobacco
 sector:defense
 AMZN

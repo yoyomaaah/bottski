@@ -184,9 +184,10 @@ def test_news_follows_pagination_tokens(config_file):
 def test_news_watermark_advances_and_is_reused(config_file):
     s = _settings(config_file)
     conn = db.connect(s.db_path)
-    latest = datetime(2026, 8, 21, 12, 0, tzinfo=timezone.utc)
+    # relative to now: a fixed date silently ages out of the 24h default window
+    latest = datetime.now(timezone.utc).replace(microsecond=0) - timedelta(hours=1)
     news_mod.collect(s, conn, fetch=FakeNewsFetch([[make_article(1, created=latest)]]))
-    assert db.get_control(conn, news_mod.WATERMARK_KEY) == "2026-08-21T12:00:00+00:00"
+    assert db.get_control(conn, news_mod.WATERMARK_KEY) == latest.isoformat(timespec="seconds")
 
     fetch2 = FakeNewsFetch([[]])
     news_mod.collect(s, conn, fetch=fetch2)
